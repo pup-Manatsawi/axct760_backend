@@ -31,7 +31,8 @@ router.get('/', async (req, res) => {
     MAX(c.OOEFL004) AS OOEFL004,
     a.xceb201,
     a.xceb202,
-    MAX(d.INBA008) AS INBA008
+    MAX(d.INBA008) AS INBA008,
+    MAX(e.inbb020) AS INBB020
   FROM xcea_t m
   LEFT JOIN xceb_t a
     ON a.XCEBDOCNO = m.XCEADOCNO
@@ -45,6 +46,9 @@ router.get('/', async (req, res) => {
     ON a.xceb101 = name101.glacl002 AND name101.glacl003 = 'en_US'
   LEFT JOIN oocql_t name110
     ON a.xceb110 = name110.oocql002 AND name110.OOCQL003 = 'en_US'
+  LEFT JOIN inbb_t e
+    ON a.XCEC001 = e.INBBDOCNO
+    
   WHERE m.XCEA005 = :month
     AND m.XCEA004 = :year
     AND (a.XCEB001 LIKE 'TS-IN010%' OR a.XCEB001 LIKE 'TS-IN999%' OR a.XCEB001 LIKE 'TS-IN020%')
