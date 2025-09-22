@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
   LEFT JOIN oocql_t name110
     ON a.xceb110 = name110.oocql002 AND name110.OOCQL003 = 'en_US'
   LEFT JOIN inbb_t e
-    ON a.XCEC001 = e.INBBDOCNO
+    ON a.XCEB001 = e.INBBDOCNO
     
   WHERE m.XCEA005 = :month
     AND m.XCEA004 = :year
