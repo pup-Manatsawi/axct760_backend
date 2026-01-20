@@ -62,6 +62,7 @@ router.get('/', async (req, res) => {
       AND TO_CHAR(b.glapdocdt, 'YYYY') = :year
       AND (COALESCE(e.apcadocno, f.XCEADOCNO) NOT LIKE '%XC090%' OR COALESCE(e.apcadocno, f.XCEADOCNO) IS NULL)
       AND c.ooefl002 = 'en_US'
+      AND b.glapstus = 'S'
 
     ORDER BY a.glaq002 ASC, TO_CHAR(b.glapdocdt, 'DD/MM/YYYY') ASC`,
   { month: parseInt(month), year: parseInt(year) }
