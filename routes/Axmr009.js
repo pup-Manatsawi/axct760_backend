@@ -158,14 +158,6 @@ AND k.pmaal002 = 'en_US'
 
 WHERE TRUNC(a.xmdg028) = TO_DATE(:year || :month || :day, 'YYYYMMDD')
  AND l.pmaoent = '666'
- 
-
-
-
-WHERE TO_CHAR(a.xmdg028, 'DD') = :day
-      AND TO_CHAR(a.xmdg028, 'MM') = :month
-      AND TO_CHAR(a.xmdg028, 'YYYY') = :year
-      AND a.xmdgent = '666'
 
 
 ORDER BY a.xmdgdocdt ASC;`,
