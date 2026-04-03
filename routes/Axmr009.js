@@ -79,7 +79,7 @@ LEFT JOIN xmdh_t b
 ON a.xmdgdocno = b.xmdhdocno
 AND b.xmdhent = '666'
 
--- xmda
+
 LEFT JOIN (
     SELECT 
         xmdadocno,
@@ -89,7 +89,7 @@ LEFT JOIN (
 ) c
 ON b.xmdh001 = c.xmdadocno
 
--- master
+
 LEFT JOIN oofa_t d
 ON a.xmdg002 = d.oofa003
 AND d.oofaent = '666'
@@ -104,7 +104,7 @@ ON b.xmdh006 = f.imaal001
 AND f.imaalent = '666'
 AND f.imaal002 = 'en_US'
 
--- oofb
+
 LEFT JOIN (
     SELECT 
         oofb019,
@@ -115,7 +115,7 @@ LEFT JOIN (
 ) g
 ON a.xmdg017 = g.oofb019
 
--- XMDK (??? 1 row)
+
 LEFT JOIN (
     SELECT *
     FROM (
@@ -132,7 +132,7 @@ LEFT JOIN (
 ON a.xmdgdocno = h.XMDK005
 AND b.xmdh001 = h.XMDK006
 
--- ? ??? isag002
+
 LEFT JOIN (
     SELECT 
         h.xmdk005 AS docno,
@@ -149,13 +149,13 @@ LEFT JOIN (
 ON a.xmdgdocno = i_agg.docno
 AND b.xmdh001 = i_agg.item
 
--- pmaal
+
 LEFT JOIN pmaal_t k
 ON a.xmdg005 = k.pmaal001
 AND k.pmaalent = '666'
 AND k.pmaal002 = 'en_US'
 
--- pmao
+
 LEFT JOIN pmao_t l
  ON b.xmdh006 = l.pmao002
  AND a.xmdg005 = l.pmao001
@@ -171,7 +171,7 @@ WHERE TO_CHAR(a.xmdg028, 'DD') = :day
 
 
 ORDER BY a.xmdgdocdt ASC;`,
-  { day: parseInt(day), month: parseInt(month), year: parseInt(year) }
+  { day, month, year }
 );
     res.json(result.rows);
   } catch (err) {
