@@ -175,12 +175,9 @@ ORDER BY a.xmdgdocdt ASC;`,
 );
     res.json(result.rows);
   } catch (err) {
-  console.error(err);
-  res.status(500).json({
-    error: 'Database error',
-    detail: err.message
-  });
-} finally {
+    console.error(err);
+    res.status(500).send('Database error');
+  } finally {
     if (connection) {
       try { await connection.close(); } catch (err) { console.error(err); }
     }
