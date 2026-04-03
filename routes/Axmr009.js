@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
       connectString: '192.168.21.100:1521/topprd'
     });
 
-    // 👉 format date ให้ชัวร์
+    // 👉 format date
     const fDay = pad(day);
     const fMonth = pad(month);
     const fYear = year.toString();
@@ -36,11 +36,15 @@ router.get('/', async (req, res) => {
     const sql = `
 SELECT
     a.xmdgdocno,
-     a.XMDGDOCDT,
-     a.XMDG028, 
+
+    -- ✅ FORMAT วันที่ตรงนี้
+    TO_CHAR(a.XMDGDOCDT, 'DD/MM/YYYY') AS XMDGDOCDT,
+    TO_CHAR(a.XMDG028, 'DD/MM/YYYY') AS XMDG028,
+
     a.xmdg005,
     k.pmaal004,
     b.xmdh001,
+
     (
         NVL(TO_NUMBER(REGEXP_SUBSTR(b.xmdh015, '[0-9]+')), 0) / 1000
     ) * NVL(b.xmdh016, 0) AS calc_qty,
@@ -48,17 +52,20 @@ SELECT
     ( 
         NVL(TO_NUMBER(REGEXP_SUBSTR(b.xmdh015, '[0-9]+')), 0) / 1000
     ) AS Unit,
+
     b.xmdh023,
     a.xmdg017,
     SUBSTR(b.xmdh006, -6) AS xmdh006_last6,
     
     h.xmdkdocno,
+
     CASE 
         WHEN a.xmdgstus = 'X' THEN 'Voided'
         WHEN a.xmdgstus = 'Y' THEN 'Confirmed'
         WHEN a.xmdgstus = 'H' THEN 'Holding'
         ELSE a.xmdgstus
     END AS status_desc,
+
     a.xmdg002,
     d.oofa011,
     e.ooefl003,
@@ -89,6 +96,7 @@ SELECT
     ) AS isaf011_list
 
 FROM xmdg_t a
+
 LEFT JOIN xmdh_t b
 ON a.xmdgdocno = b.xmdhdocno
 AND b.xmdhent = '666'
@@ -165,7 +173,7 @@ AND a.xmdg005 = l.pmao001
 AND b.xmdh034 = l.pmao004
 AND l.pmaoent = '666'
 
--- ✅ เปลี่ยนตรงนี้ (เร็ว + ไม่พัง format)
+-- ✅ filter date (เร็ว)
 WHERE a.xmdg028 >= TO_DATE(:dateStr, 'YYYYMMDD')
 AND a.xmdg028 < TO_DATE(:dateStr, 'YYYYMMDD') + 1
 AND a.xmdgent = '666'
@@ -176,7 +184,7 @@ ORDER BY a.xmdgdocdt ASC
     const result = await connection.execute(
       sql,
       { dateStr: bindDate },
-      { outFormat: oracledb.OUT_FORMAT_OBJECT } // ✅ สำคัญมาก
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
     console.log('✅ Rows:', result.rows.length);
@@ -188,7 +196,7 @@ ORDER BY a.xmdgdocdt ASC
 
     return res.status(500).json({
       error: 'Database error',
-      detail: err.message // 👉 debug ได้เลย
+      detail: err.message
     });
 
   } finally {
