@@ -4,11 +4,12 @@ const oracledb = require('oracledb');
 
 router.get('/', async (req, res) => {
   let connection;
+    const day = req.query.day;
   const month = req.query.month;
   const year = req.query.year;
 
-  if (!month || !year) {
-    return res.status(400).send('Missing month or year parameter');
+  if (!day || !month || !year) {
+    return res.status(400).send('Missing day, month or year parameter');
   }
 
   try {
@@ -174,9 +175,12 @@ ORDER BY a.xmdgdocdt ASC;`,
 );
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Database error');
-  } finally {
+  console.error(err);
+  res.status(500).json({
+    error: 'Database error',
+    detail: err.message
+  });
+} finally {
     if (connection) {
       try { await connection.close(); } catch (err) { console.error(err); }
     }
