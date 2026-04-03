@@ -156,11 +156,9 @@ AND k.pmaalent = '666'
 AND k.pmaal002 = 'en_US'
 
 
-LEFT JOIN pmao_t l
- ON b.xmdh006 = l.pmao002
- AND a.xmdg005 = l.pmao001
- AND b.xmdh034 = l.pmao004
+WHERE TRUNC(a.xmdg028) = TO_DATE(:year || :month || :day, 'YYYYMMDD')
  AND l.pmaoent = '666'
+ 
 
 
 
