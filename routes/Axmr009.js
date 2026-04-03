@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const oracledb = require('oracledb');
+const pad = (n) => n.toString().padStart(2, '0');
 
 router.get('/', async (req, res) => {
   let connection;
@@ -168,7 +169,11 @@ WHERE TRUNC(a.xmdg028) = TO_DATE(:year || :month || :day, 'YYYYMMDD')
 AND a.xmdgent = '666'
 
 ORDER BY a.xmdgdocdt ASC;`,
-  { day: parseInt(day), month: parseInt(month), year: parseInt(year) }
+  { 
+  day: pad(day),
+  month: pad(month),
+  year: year.toString()
+}
 );
     res.json(result.rows);
   } catch (err) {
