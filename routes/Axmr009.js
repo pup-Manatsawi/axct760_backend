@@ -36,8 +36,8 @@ router.get('/', async (req, res) => {
     const sql = `
 SELECT
     a.xmdgdocno,
-     formatDate(a.XMDGDOCDT),
-     formatDate(a.XMDG028), 
+     a.XMDGDOCDT,
+     a.XMDG028, 
     a.xmdg005,
     k.pmaal004,
     b.xmdh001,
