@@ -171,7 +171,7 @@ WHERE TO_CHAR(a.xmdg028, 'DD') = :day
 
 
 ORDER BY a.xmdgdocdt ASC;`,
-  { day, month, year }
+  { day: parseInt(day), month: parseInt(month), year: parseInt(year) }
 );
     res.json(result.rows);
   } catch (err) {
