@@ -1,16 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const oracledb = require('oracledb');
+
+// 👉 pad function
 const pad = (n) => n.toString().padStart(2, '0');
 
 router.get('/', async (req, res) => {
   let connection;
-    const day = req.query.day;
-  const month = req.query.month;
-  const year = req.query.year;
 
+  const { day, month, year } = req.query;
+
+  // ✅ validate input
   if (!day || !month || !year) {
-    return res.status(400).send('Missing day, month or year parameter');
+    return res.status(400).json({
+      error: 'Missing day, month or year parameter'
+    });
   }
 
   try {
@@ -20,8 +24,17 @@ router.get('/', async (req, res) => {
       connectString: '192.168.21.100:1521/topprd'
     });
 
-   const result = await connection.execute(
-  `SELECT
+    // 👉 format date ให้ชัวร์
+    const fDay = pad(day);
+    const fMonth = pad(month);
+    const fYear = year.toString();
+
+    const bindDate = `${fYear}${fMonth}${fDay}`;
+
+    console.log('📅 Query Date:', bindDate);
+
+    const sql = `
+SELECT
     a.xmdgdocno,
     a.xmdgdocdt,
     a.xmdg028,
@@ -33,11 +46,11 @@ router.get('/', async (req, res) => {
     ) * NVL(b.xmdh016, 0) AS calc_qty,
     
     ( 
-   NVL(TO_NUMBER(REGEXP_SUBSTR(b.xmdh015, '[0-9]+')), 0) / 1000
-   ) AS Unit,
-   b.xmdh023,
-   a.xmdg017,
-   SUBSTR(b.xmdh006, -6) AS xmdh006_last6,
+        NVL(TO_NUMBER(REGEXP_SUBSTR(b.xmdh015, '[0-9]+')), 0) / 1000
+    ) AS Unit,
+    b.xmdh023,
+    a.xmdg017,
+    SUBSTR(b.xmdh006, -6) AS xmdh006_last6,
     
     h.xmdkdocno,
     CASE 
@@ -59,9 +72,10 @@ router.get('/', async (req, res) => {
     g.oofb011,
 
     i_agg.isag002_list,
+
     (
         SELECT LISTAGG(DISTINCT j.isaf011, ', ')
-               WITHIN GROUP (ORDER BY j.isaf011)
+        WITHIN GROUP (ORDER BY j.isaf011)
         FROM xmdk_t h2
         JOIN isag_t i2
             ON h2.xmdkdocno = i2.isag002
@@ -73,23 +87,18 @@ router.get('/', async (req, res) => {
           AND h2.xmdkent = '666'
           AND j.isafent = '666'
     ) AS isaf011_list
-    
 
 FROM xmdg_t a
 LEFT JOIN xmdh_t b
 ON a.xmdgdocno = b.xmdhdocno
 AND b.xmdhent = '666'
 
-
 LEFT JOIN (
-    SELECT 
-        xmdadocno,
-        MAX(xmda033) AS xmda033
+    SELECT xmdadocno, MAX(xmda033) AS xmda033
     FROM xmda_t
     GROUP BY xmdadocno
 ) c
 ON b.xmdh001 = c.xmdadocno
-
 
 LEFT JOIN oofa_t d
 ON a.xmdg002 = d.oofa003
@@ -105,17 +114,13 @@ ON b.xmdh006 = f.imaal001
 AND f.imaalent = '666'
 AND f.imaal002 = 'en_US'
 
-
 LEFT JOIN (
-    SELECT 
-        oofb019,
-        MAX(oofb011) AS oofb011
+    SELECT oofb019, MAX(oofb011) AS oofb011
     FROM oofb_t
     WHERE oofbent = '666'
     GROUP BY oofb019
 ) g
 ON a.xmdg017 = g.oofb019
-
 
 LEFT JOIN (
     SELECT *
@@ -133,13 +138,12 @@ LEFT JOIN (
 ON a.xmdgdocno = h.XMDK005
 AND b.xmdh001 = h.XMDK006
 
-
 LEFT JOIN (
     SELECT 
         h.xmdk005 AS docno,
         h.xmdk006 AS item,
         LISTAGG(DISTINCT i.isag002, ', ') 
-            WITHIN GROUP (ORDER BY i.isag002) AS isag002_list
+        WITHIN GROUP (ORDER BY i.isag002) AS isag002_list
     FROM xmdk_t h
     JOIN isag_t i
         ON h.xmdkdocno = i.isag002
@@ -150,38 +154,50 @@ LEFT JOIN (
 ON a.xmdgdocno = i_agg.docno
 AND b.xmdh001 = i_agg.item
 
-
 LEFT JOIN pmaal_t k
 ON a.xmdg005 = k.pmaal001
 AND k.pmaalent = '666'
 AND k.pmaal002 = 'en_US'
 
-
 LEFT JOIN pmao_t l
- ON b.xmdh006 = l.pmao002
- AND a.xmdg005 = l.pmao001
- AND b.xmdh034 = l.pmao004
- AND l.pmaoent = '666'
+ON b.xmdh006 = l.pmao002
+AND a.xmdg005 = l.pmao001
+AND b.xmdh034 = l.pmao004
+AND l.pmaoent = '666'
 
-
-
-WHERE TRUNC(a.xmdg028) = TO_DATE(:year || :month || :day, 'YYYYMMDD')
+-- ✅ เปลี่ยนตรงนี้ (เร็ว + ไม่พัง format)
+WHERE a.xmdg028 >= TO_DATE(:dateStr, 'YYYYMMDD')
+AND a.xmdg028 < TO_DATE(:dateStr, 'YYYYMMDD') + 1
 AND a.xmdgent = '666'
 
-ORDER BY a.xmdgdocdt ASC;`,
-  { 
-  day: pad(day),
-  month: pad(month),
-  year: year.toString()
-}
-);
-    res.json(result.rows);
+ORDER BY a.xmdgdocdt ASC
+`;
+
+    const result = await connection.execute(
+      sql,
+      { dateStr: bindDate },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT } // ✅ สำคัญมาก
+    );
+
+    console.log('✅ Rows:', result.rows.length);
+
+    return res.json(result.rows);
+
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Database error');
+    console.error('❌ DB ERROR:', err);
+
+    return res.status(500).json({
+      error: 'Database error',
+      detail: err.message // 👉 debug ได้เลย
+    });
+
   } finally {
     if (connection) {
-      try { await connection.close(); } catch (err) { console.error(err); }
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('❌ Close error:', err);
+      }
     }
   }
 });
