@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
         SUBSTR(b.xmdh006, -6) AS xmdh006_last6,
         
         h.xmdkdocno,
-        TO_CHAR(a.XMDK001, 'DD/MM/YYYY') AS XMDK001,
+        TO_CHAR(h.XMDK001, 'DD/MM/YYYY') AS XMDK001,
         CASE 
             WHEN a.xmdgstus = 'X' THEN 'Voided'
             WHEN a.xmdgstus = 'Y' THEN 'Confirmed'
