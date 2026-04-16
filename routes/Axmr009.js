@@ -69,6 +69,7 @@ router.get('/', async (req, res) => {
         SUBSTR(b.xmdh006, -6) AS xmdh006_last6,
         
         h.xmdkdocno,
+        h.xmdk001,
 
         CASE 
             WHEN a.xmdgstus = 'X' THEN 'Voided'
