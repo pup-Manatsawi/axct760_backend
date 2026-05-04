@@ -70,12 +70,11 @@ router.get('/', async (req, res) => {
         WHEN e.pmaa006 = 'R0003' THEN 'BRANCH NO.00003'
         WHEN e.pmaa006 = 'R0006' THEN 'BRANCH NO.00006'
         WHEN e.pmaa006 = 'R0007' THEN 'BRANCH NO.00007'
-        ELSE 'ไม่พบข้อมูลสาขา'
+        ELSE 'ไม่พบสาขา'
     END AS BRANCH_NO,
 
     c.isaf021,
     c.isaf002,
-
     CASE 
     WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag101
     ELSE d.xmdh023
@@ -109,7 +108,7 @@ END AS xmdh021,
      ( 
    NVL(TO_NUMBER(REGEXP_SUBSTR(d.xmdh015, '[0-9]+')), 0) / 1000
    ) AS Unit,
-   xmda.xmda033
+   c.xmda033
    
 
 FROM isaf_t c
@@ -153,13 +152,14 @@ LEFT JOIN (
         MAX(xmda033) AS xmda033
     FROM xmda_t
     GROUP BY xmdadocno
-) xmda
-ON d.xmdh001 = xmda.xmdadocno
+) c
+ON d.xmdh001 = c.xmdadocno
 
 WHERE c.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND c.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND c.isafstus = 'Y'
-  
+
+
   ORDER BY 
     CASE 
         WHEN c.isaf011 LIKE 'D%' THEN 1
@@ -168,7 +168,10 @@ WHERE c.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
         WHEN c.isaf011 LIKE 'F%' THEN 4
         ELSE 5
     END,
-    c.isaf011;`;
+    c.isaf011;
+    
+    
+    `;
 
     const result = await connection.execute(
       sql,
