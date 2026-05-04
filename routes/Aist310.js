@@ -108,7 +108,7 @@ END AS xmdh021,
      ( 
    NVL(TO_NUMBER(REGEXP_SUBSTR(d.xmdh015, '[0-9]+')), 0) / 1000
    ) AS Unit,
-   c.xmda033
+   g.xmda033
    
 
 FROM isaf_t c
@@ -152,8 +152,8 @@ LEFT JOIN (
         MAX(xmda033) AS xmda033
     FROM xmda_t
     GROUP BY xmdadocno
-) c
-ON d.xmdh001 = c.xmdadocno
+) g
+    ON d.xmdh001 = g.xmdadocno
 
 WHERE c.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND c.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
