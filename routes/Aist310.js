@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
 
     const sql = `
     SELECT DISTINCT
-    TO_CHAR(c.isaf014, 'DD Mon YYYY', 'NLS_DATE_LANGUAGE=ENGLISH') AS formatted_date,
+    TO_CHAR(c.isaf014, 'DD/MM/YYYY') AS formatted_date,
     c.isaf011,
 
     CASE 
