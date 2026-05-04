@@ -4,11 +4,30 @@ const oracledb = require('oracledb');
 
 router.get('/', async (req, res) => {
   let connection;
-  const month = req.query.month;
-  const year = req.query.year;
 
-  if (!month || !year) {
-    return res.status(400).send('Missing month or year parameter');
+  const { startDate, endDate } = req.query;
+
+  // ✅ 1. check missing
+  if (!startDate || !endDate) {
+    return res.status(400).json({
+      error: 'Missing startDate or endDate'
+    });
+  }
+
+  // ✅ 2. check format YYYY-MM-DD
+  const isValidDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d);
+
+  if (!isValidDate(startDate) || !isValidDate(endDate)) {
+    return res.status(400).json({
+      error: 'Invalid date format (YYYY-MM-DD only)'
+    });
+  }
+
+  // ✅ 3. check range
+  if (startDate > endDate) {
+    return res.status(400).json({
+      error: 'startDate must be <= endDate'
+    });
   }
 
   try {
@@ -18,8 +37,16 @@ router.get('/', async (req, res) => {
       connectString: '192.168.21.100:1521/topprd'
     });
 
-   const result = await connection.execute(
-  `SELECT DISTINCT
+    // ✅ convert format → YYYYMMDD
+    const toOracleDate = (dateStr) => dateStr.replace(/-/g, '');
+
+    const start = toOracleDate(startDate);
+    const end = toOracleDate(endDate);
+
+    console.log(`📅 Range: ${startDate} → ${endDate}`);
+
+    const sql = `
+    SELECT DISTINCT
     TO_CHAR(c.isaf014, 'DD Mon YYYY', 'NLS_DATE_LANGUAGE=ENGLISH') AS formatted_date,
     c.isaf011,
 
@@ -43,7 +70,7 @@ router.get('/', async (req, res) => {
         WHEN e.pmaa006 = 'R0003' THEN 'BRANCH NO.00003'
         WHEN e.pmaa006 = 'R0006' THEN 'BRANCH NO.00006'
         WHEN e.pmaa006 = 'R0007' THEN 'BRANCH NO.00007'
-        ELSE '??????'
+        ELSE 'ไม่พบข้อมูลสาขา'
     END AS BRANCH_NO,
 
     c.isaf021,
@@ -78,17 +105,23 @@ END AS xmdh021,
         WHEN c.isaf011 LIKE 'F%' THEN xr.xrce_data
         WHEN c.isaf011 LIKE 'CN%' THEN a_cn.xmdl001
         ELSE a.xmdl001
-    END AS xmdl001
+    END AS xmdl001,
+     ( 
+   NVL(TO_NUMBER(REGEXP_SUBSTR(d.xmdh015, '[0-9]+')), 0) / 1000
+   ) AS Unit,
+   xmda.xmda033
+   
 
 FROM isaf_t c
 
 LEFT JOIN isag_t b
     ON c.isafdocno = b.isagdocno
 
+-- ????
 LEFT JOIN xmdl_t a
     ON b.isag002 = a.xmdldocno
 
---  CN
+-- ? ?????? CN
 LEFT JOIN xmdl_t a_cn
     ON a.xmdl001 = a_cn.xmdldocno
 
@@ -112,9 +145,19 @@ LEFT JOIN (
     GROUP BY xrce054
 ) xr
     ON xr.xrce054 = c.isaf011
+    
+-- xmda
+LEFT JOIN (
+    SELECT 
+        xmdadocno,
+        MAX(xmda033) AS xmda033
+    FROM xmda_t
+    GROUP BY xmdadocno
+) xmda
+ON d.xmdh001 = xmda.xmdadocno
 
-WHERE c.isaf014 >= TRUNC(TO_DATE(:year || :month, 'YYYYMM'), 'MM')
-  AND c.isaf014 < ADD_MONTHS(TRUNC(TO_DATE(:year || :month, 'YYYYMM'), 'MM'), 1)
+WHERE c.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
+  AND c.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND c.isafstus = 'Y'
   
   ORDER BY 
@@ -125,16 +168,33 @@ WHERE c.isaf014 >= TRUNC(TO_DATE(:year || :month, 'YYYYMM'), 'MM')
         WHEN c.isaf011 LIKE 'F%' THEN 4
         ELSE 5
     END,
-    c.isaf011`,
-  { month: month.toString().padStart(2, '0'), year: parseInt(year) }
-);
-    res.json(result.rows);
+    c.isaf011;`;
+
+    const result = await connection.execute(
+      sql,
+      { startDate: start, endDate: end },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    console.log(`🔢 Rows: ${result.rows.length}`);
+
+    return res.json(result.rows);
+
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Database error');
+    console.error('❌ DB ERROR:', err);
+
+    return res.status(500).json({
+      error: 'Database error',
+      detail: err.message
+    });
+
   } finally {
     if (connection) {
-      try { await connection.close(); } catch (err) { console.error(err); }
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('❌ Close error:', err);
+      }
     }
   }
 });
