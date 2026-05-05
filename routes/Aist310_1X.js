@@ -64,7 +64,6 @@ router.get('/', async (req, res) => {
 
     CASE
         WHEN e.pmaa006 IS NULL THEN 'HEAD OFFICE'
-        WHEN e.pmaa006 = 'NULL' THEN 'HEAD OFFICE'               
         WHEN e.pmaa006 = 'R0001' THEN 'BRANCH NO.00001'
         WHEN e.pmaa006 = 'R0002' THEN 'BRANCH NO.00002'
         WHEN e.pmaa006 = 'R0003' THEN 'BRANCH NO.00003'
@@ -75,52 +74,67 @@ router.get('/', async (req, res) => {
 
     c.isaf021,
     c.isaf002,
+
     CASE 
-    WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag101
-    ELSE d.xmdh023
-END AS xmdh023,
+        WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag101
+        ELSE d.xmdh023
+    END AS xmdh023,
 
-CASE 
-    WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag103
-    ELSE d.xmdh026
-END AS xmdh026,
+    CASE 
+        WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag103
+        ELSE d.xmdh026
+    END AS xmdh026,
 
-CASE 
-    WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag104
-    ELSE d.xmdh028
-END AS xmdh028,
+    CASE 
+        WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag104
+        ELSE d.xmdh028
+    END AS xmdh028,
 
-CASE 
-    WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag105
-    ELSE d.xmdh027
-END AS xmdh027,
+    CASE 
+        WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag105
+        ELSE d.xmdh027
+    END AS xmdh027,
 
-CASE 
-    WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag004
-    ELSE d.xmdh021
-END AS xmdh021,
+    CASE 
+        WHEN c.isaf011 LIKE 'CN%' OR c.isaf011 LIKE 'F%' THEN b.isag004
+        ELSE d.xmdh021
+    END AS xmdh021,
 
     CASE 
         WHEN c.isaf011 LIKE 'F%' THEN xr.xrce_data
         WHEN c.isaf011 LIKE 'CN%' THEN a_cn.xmdl001
         ELSE a.xmdl001
     END AS xmdl001,
-     ( 
-   NVL(TO_NUMBER(REGEXP_SUBSTR(d.xmdh015, '[0-9]+')), 0) / 1000
-   ) AS Unit,
-   g.xmda033
-   
+
+    (
+        NVL(TO_NUMBER(REGEXP_SUBSTR(d.xmdh015, '[0-9]+', 1, 1)), 0) / 1000
+    ) AS Unit,
+
+    g.xmda033
 
 FROM isaf_t c
 
 LEFT JOIN isag_t b
     ON c.isafdocno = b.isagdocno
 
--- ????
+-- xmdl หลัก
 LEFT JOIN xmdl_t a
     ON b.isag002 = a.xmdldocno
 
-LEFT JOIN xmdh_t d
+-- xmdl สำหรับ CN (แก้ join ให้ตรง key มากขึ้น)
+LEFT JOIN xmdl_t a_cn
+    ON b.isag002 = a_cn.xmdldocno
+
+-- 🔥 FIX: xmdh เอาแค่ 1 row ต่อ doc
+LEFT JOIN (
+    SELECT *
+    FROM (
+        SELECT d.*,
+               ROW_NUMBER() OVER (PARTITION BY d.xmdhdocno ORDER BY d.xmdh001) rn
+        FROM xmdh_t d
+    )
+    WHERE rn = 1
+) d
     ON a.xmdl001 = d.xmdhdocno
 
 LEFT JOIN pmaa_t e
@@ -131,6 +145,7 @@ LEFT JOIN pmao_t f
    AND f.pmao001 = c.isaf002 
    AND f.pmao004 = b.isag016
 
+-- xrce aggregate
 LEFT JOIN (
     SELECT 
         xrce054,
@@ -140,8 +155,8 @@ LEFT JOIN (
     GROUP BY xrce054
 ) xr
     ON xr.xrce054 = c.isaf011
-    
--- xmda
+
+-- xmda aggregate
 LEFT JOIN (
     SELECT 
         xmdadocno,
@@ -155,8 +170,7 @@ WHERE c.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND c.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND c.isafstus = 'Y'
 
-
-  ORDER BY 
+ORDER BY 
     CASE 
         WHEN c.isaf011 LIKE 'D%' THEN 1
         WHEN c.isaf011 LIKE 'CN%' THEN 2
@@ -165,8 +179,6 @@ WHERE c.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
         ELSE 5
     END,
     c.isaf011;
-    
-    
     `;
 
     const result = await connection.execute(
