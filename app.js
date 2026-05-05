@@ -32,6 +32,9 @@ app.use('/api/aist310', aist310Router);
 const aist310_1XRouter = require('./routes/Aist310_1X');
 app.use('/api/aist310_1X', aist310_1XRouter);
 
+const aist310_2XRouter = require('./routes/Aist310_2X');
+app.use('/api/aist310_2X', aist310_2XRouter);
+
 // Serve React build
 app.use(express.static(path.join(__dirname, 'build')));
 
