@@ -4,13 +4,16 @@ const oracledb = require('oracledb');
 
 router.get('/', async (req, res) => {
   let connection;
-  const month = req.query.month;
-  const year = req.query.year;
+
+  const { month, year } = req.query;
 
   if (!month || !year) {
-    return res.status(400).send('Missing month or year parameter');
+    return res.status(400).json({
+      success: false,
+      message: 'Missing month or year parameter'
+    });
   }
-
+    const startDate = `${year}-${month.padStart(2, '0')}-01`;
   try {
     connection = await oracledb.getConnection({
       user: 'dsdata',
@@ -18,11 +21,8 @@ router.get('/', async (req, res) => {
       connectString: '192.168.21.100:1521/topprd'
     });
 
-    const startDate = new Date(year, month - 1, 1);
-const endDate = new Date(year, month, 0);
-
-const result = await connection.execute(
-  `SELECT DISTINCT
+    const sql = `
+    SELECT DISTINCT
     TO_CHAR(c.isaf014, 'DD/MM/YYYY') AS formatted_date,
     c.isaf011,
 
@@ -142,28 +142,47 @@ LEFT JOIN (
 ) g
     ON d.xmdh001 = g.xmdadocno
 
-WHERE c.isaf014 BETWEEN :startDate AND :endDate
+WHERE c.isaf014 >= TO_DATE(:startDate,'YYYY-MM-DD')
+  AND c.isaf014 < ADD_MONTHS(TO_DATE(:startDate,'YYYY-MM-DD'), 1)
   AND c.isafstus = 'Y'
 
-ORDER BY 
-    CASE 
-        WHEN SUBSTR(c.isaf011,1,1) = 'D' THEN 1
-        WHEN c.isaf011 LIKE 'CN%' THEN 2
-        WHEN SUBSTR(c.isaf011,1,1) = 'S' THEN 3
-        WHEN SUBSTR(c.isaf011,1,1) = 'F' THEN 4
-        ELSE 5
-    END,
-    c.isaf011;`,
-  { startDate, endDate }
-);
+ORDER BY
+CASE
+  WHEN c.isaf011 LIKE 'D%' THEN 1
+  WHEN c.isaf011 LIKE 'CN%' THEN 2
+  WHEN c.isaf011 LIKE 'S%' THEN 3
+  WHEN c.isaf011 LIKE 'F%' THEN 4
+  ELSE 5
+END,
+    c.isaf011;
+    `;
 
-    res.json(result.rows);
+    const result = await connection.execute(
+      sql,
+      {
+        month: month.padStart(2, '0'),
+        year: year.toString()
+      },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    return res.json({
+      success: true,
+      count: result.rows.length,
+      data: result.rows
+    });
+
   } catch (err) {
     console.error(err);
-    res.status(500).send('Database error');
+    return res.status(500).json({
+      success: false,
+      message: 'Database error',
+      error: err.message
+    });
+
   } finally {
     if (connection) {
-      try { await connection.close(); } catch (err) { console.error(err); }
+      try { await connection.close(); } catch (e) {}
     }
   }
 });
