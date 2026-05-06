@@ -104,7 +104,11 @@ router.get('/', async (req, res) => {
               AND h2.xmdk006 = b.xmdh001
               AND h2.xmdkent = '666'
               AND j.isafent = '666'
-        ) AS isaf011_list
+        ) AS isaf011_list,
+        a.xmdg008,
+        m.ooibl004,
+        a.xmdg009,
+        n.oocql004
 
     FROM xmdg_t a
 
@@ -183,7 +187,27 @@ router.get('/', async (req, res) => {
      AND a.xmdg005 = l.pmao001
      AND b.xmdh034 = l.pmao004
      AND l.pmaoent = '666'
-
+     
+     LEFT JOIN (
+    SELECT ooibl002, MAX(ooibl004) AS ooibl004
+    FROM ooibl_t
+    WHERE ooiblent = '666'
+      AND ooibl003 = 'en_US'
+    GROUP BY ooibl002
+    ) m
+    ON a.xmdg008 = m.ooibl002
+ 
+    
+    LEFT JOIN (
+    SELECT oocql002, MAX(oocql004) AS oocql004
+    FROM oocql_t
+    WHERE oocqlent = '666'
+      AND oocql003 = 'en_US'
+    GROUP BY oocql002
+) n
+ON a.xmdg009 = n.oocql002
+     
+    
     WHERE a.xmdg028 >= TO_DATE(:startDate, 'YYYYMMDD')
       AND a.xmdg028 < TO_DATE(:endDate, 'YYYYMMDD') + 1
       AND a.xmdgent = '666'
