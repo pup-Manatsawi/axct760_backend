@@ -7,14 +7,14 @@ router.get('/', async (req, res) => {
 
   const { startDate, endDate } = req.query;
 
-  // ✅ 1. check missing
+
   if (!startDate || !endDate) {
     return res.status(400).json({
       error: 'Missing startDate or endDate'
     });
   }
 
-  // ✅ 2. check format YYYY-MM-DD
+
   const isValidDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d);
 
   if (!isValidDate(startDate) || !isValidDate(endDate)) {
@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
     });
   }
 
-  // ✅ 3. check range
+
   if (startDate > endDate) {
     return res.status(400).json({
       error: 'startDate must be <= endDate'
@@ -37,7 +37,6 @@ router.get('/', async (req, res) => {
       connectString: '192.168.21.100:1521/topprd'
     });
 
-    // ✅ convert format → YYYYMMDD
     const toOracleDate = (dateStr) => dateStr.replace(/-/g, '');
 
     const start = toOracleDate(startDate);
@@ -181,16 +180,7 @@ END,
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
     g.xmda033
 
-ORDER BY
-CASE
-    WHEN a.isaf011 LIKE 'DN%' THEN 2
-    WHEN a.isaf011 LIKE 'D%' THEN 1
-    WHEN a.isaf011 LIKE 'CN%' THEN 3
-    WHEN a.isaf011 LIKE 'S%' THEN 4
-    WHEN a.isaf011 LIKE 'F%' THEN 5
-    ELSE 6
-END,
-a.isaf011;
+ORDER BY a.isaf011;
     `;
 
     const result = await connection.execute(
