@@ -118,13 +118,6 @@ WHERE c.isaf014 >= TRUNC(TO_DATE(:year || :month, 'YYYYMM'), 'MM')
   AND c.isafstus = 'Y'
   
   ORDER BY 
-    CASE 
-        WHEN c.isaf011 LIKE 'D%' THEN 1
-        WHEN c.isaf011 LIKE 'CN%' THEN 2
-        WHEN c.isaf011 LIKE 'S%' THEN 3
-        WHEN c.isaf011 LIKE 'F%' THEN 4
-        ELSE 5
-    END,
     isaf011`,
   { month: month.toString().padStart(2, '0'), year: parseInt(year) }
 );
