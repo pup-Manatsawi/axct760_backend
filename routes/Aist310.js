@@ -125,7 +125,7 @@ WHERE c.isaf014 >= TRUNC(TO_DATE(:year || :month, 'YYYYMM'), 'MM')
         WHEN c.isaf011 LIKE 'F%' THEN 4
         ELSE 5
     END,
-    c.isaf011`,
+    isaf011`,
   { month: month.toString().padStart(2, '0'), year: parseInt(year) }
 );
     res.json(result.rows);
