@@ -119,7 +119,6 @@ LEFT JOIN xmdh_t f
     AND e.xmdl003 = f.xmdh001
     AND f.xmdhent = '666'
 
--- ? ??? LISTAGG ???????????
 LEFT JOIN (
     SELECT xrce054,
            LISTAGG(xrce003 || ',' || xrcedocno)
