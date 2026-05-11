@@ -181,14 +181,6 @@ END,
     g.xmda033
 
 ORDER BY
-CASE
-    WHEN a.isaf011 LIKE 'DN%' THEN 2
-    WHEN a.isaf011 LIKE 'D%' THEN 1
-    WHEN a.isaf011 LIKE 'CN%' THEN 3
-    WHEN a.isaf011 LIKE 'S%' THEN 4
-    WHEN a.isaf011 LIKE 'F%' THEN 5
-    ELSE 6
-END,
 isaf011;
     `;
 
