@@ -137,15 +137,6 @@ LEFT JOIN (
 ) g
     ON f.xmdh001 = g.xmdadocno
     
-    LEFT JOIN isag_t b_cn
-    ON a.isaf011 = b_cn.isag014
-    AND b_cn.isagent = '666'
-
-    LEFT JOIN xmdl_t e_cn
-    ON b_cn.isag002 = e_cn.xmdldocno
-   AND b_cn.isag019 = e_cn.xmdl003
-    AND e_cn.xmdlent = '666'
-    
 
 WHERE a.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
