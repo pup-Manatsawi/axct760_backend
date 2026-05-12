@@ -181,7 +181,7 @@ END,
     g.xmda033
 
 ORDER BY
-isaf011;
+isaf011
     `;
 
     const result = await connection.execute(
