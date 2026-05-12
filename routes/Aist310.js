@@ -80,8 +80,7 @@ router.get('/', async (req, res) => {
     SUM(b.isag103) AS isag103,
     SUM(b.isag104) AS isag104,
     SUM(b.isag105) AS isag105,
-
-    b.isag004,
+    SUM(b.isag004) AS isag004,
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
