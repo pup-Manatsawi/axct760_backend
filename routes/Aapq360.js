@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
     const sql = `
     SELECT
     a.apcadocno,
-    a.apcadocdt,
+     TO_CHAR(a.apcadocdt, 'DD/MM/YYYY') AS apcadocdt,
       
     CASE
         WHEN a.apca001 = '01' THEN '01:AP  Estimations'
