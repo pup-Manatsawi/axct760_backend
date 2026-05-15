@@ -1,3 +1,10 @@
+require('dotenv').config();
+
+if (!process.env.DB_USER || !process.env.DB_PASSWORD) {
+  console.error('❌ Missing DB config');
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
