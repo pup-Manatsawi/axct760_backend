@@ -1,6 +1,5 @@
-require('dotenv').config({
-  path: __dirname + '/.env'
-});
+console.log('DB_USER =', process.env.DB_USER);
+
 
 const express = require('express');
 const cors = require('cors');
