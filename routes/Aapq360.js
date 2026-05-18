@@ -32,9 +32,9 @@ router.get('/', async (req, res) => {
 
   try {
     connection = await oracledb.getConnection({
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    connectString: process.env.DB_CONNECT
+      user: 'dsdata',
+      password: 'dsdata',
+      connectString: '192.168.21.100:1521/topprd'
 });
 
     // ✅ convert format → YYYYMMDD
