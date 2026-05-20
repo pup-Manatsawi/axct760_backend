@@ -46,7 +46,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-    SELECT
+     SELECT
     TO_CHAR(a.isaf014, 'DD Mon YYYY', 'NLS_DATE_LANGUAGE=ENGLISH') AS formatted_date,
     a.isaf011,
 
@@ -80,8 +80,10 @@ router.get('/', async (req, res) => {
     SUM(b.isag103) AS isag103,
     SUM(b.isag104) AS isag104,
     SUM(b.isag105) AS isag105,
+    a.isaf101,
+    a.isaf100,
     SUM(b.isag004) AS isag004,
-
+    
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
          WHEN a.isaf011 LIKE 'CN%' THEN b.isag014
@@ -169,7 +171,11 @@ GROUP BY
     a.isaf021,
     a.isaf002,
     b.isag101,
+    a.isaf101,
+    a.isaf100,
     b.isag004,
+    
+
 
     CASE 
     WHEN a.isaf011 LIKE 'F%' THEN h.list_docno
