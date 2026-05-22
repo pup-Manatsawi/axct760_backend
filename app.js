@@ -1,23 +1,18 @@
-/*require('dotenv').config();
-
-if (!process.env.DB_USER || !process.env.DB_PASSWORD) {
-  console.error('❌ Missing DB config');
-}*/
-
-console.log('USER:', process.env.DB_USER);
-console.log('PASS:', process.env.DB_PASSWORD);
-console.log('CONNECT:', process.env.DB_CONNECT);
+require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { initPool } = require('./config/db');
+
 const app = express();
 const port = 3001;
 
+// middleware
 app.use(cors());
 app.use(express.json());
 
-// นำ route ใหม่มาใช้
+// routes
 const aglq760Router = require('./routes/Aglq760');
 app.use('/api/aglq760', aglq760Router);
 
@@ -42,11 +37,22 @@ app.use('/api/aist310', aist310Router);
 const aapq360Router = require('./routes/Aapq360');
 app.use('/api/aapq360', aapq360Router);
 
-// Serve React build
+// React build
 app.use(express.static(path.join(__dirname, 'build')));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
-app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
+// start server AFTER DB ready
+initPool()
+  .then(() => {
+    console.log('✅ DB Connected');
+
+    app.listen(port, () => {
+      console.log(`🚀 Server running at http://localhost:${port}`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Failed to start server:', err);
+  });

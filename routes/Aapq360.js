@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const oracledb = require('oracledb');
+const { getConnection } = require('../config/db');
 
 router.get('/', async (req, res) => {
   let connection;
@@ -31,11 +32,7 @@ router.get('/', async (req, res) => {
   }
 
   try {
-    connection = await oracledb.getConnection({
-      user: 'dsdata',
-      password: 'dsdata',
-      connectString: '192.168.21.100:1521/topprd'
-});
+    connection = await getConnection();
 
     // ✅ convert format → YYYYMMDD
     const toOracleDate = (dateStr) => dateStr.replace(/-/g, '');
