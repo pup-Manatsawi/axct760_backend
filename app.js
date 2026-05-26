@@ -1,0 +1,64 @@
+require('dotenv').config();
+
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const { initPool } = require('./config/db');
+const dbConfig = {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  connectString: process.env.DB_CONNECT
+};
+
+
+const app = express();
+const port = 3001;
+
+// middleware
+app.use(cors());
+app.use(express.json());
+
+// routes
+const aglq760Router = require('./routes/Aglq760');
+app.use('/api/aglq760', aglq760Router);
+
+const axct201Router = require('./routes/Axct201');
+app.use('/api/axct201', axct201Router);
+
+const axct707_6XXXRouter = require('./routes/Axct707_6XXX');
+app.use('/api/axct707_6XXX', axct707_6XXXRouter);
+
+const axct707_12XXRouter = require('./routes/Axct707_12XX');
+app.use('/api/axct707_12XX', axct707_12XXRouter);
+
+const aint302Router = require('./routes/Aint302');
+app.use('/api/aint302', aint302Router);
+
+const axmr009Router = require('./routes/Axmr009');
+app.use('/api/axmr009', axmr009Router);
+
+const aist310Router = require('./routes/Aist310');
+app.use('/api/aist310', aist310Router);
+
+const aapq360Router = require('./routes/Aapq360');
+app.use('/api/aapq360', aapq360Router);
+
+// React build
+app.use(express.static(path.join(__dirname, 'build')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+// start server AFTER DB ready
+initPool()
+  .then(() => {
+    console.log('✅ DB Connected');
+
+    app.listen(port, () => {
+      console.log(`🚀 Server running at http://localhost:${port}`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Failed to start server:', err);
+  });
