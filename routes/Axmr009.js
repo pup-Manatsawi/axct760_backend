@@ -52,14 +52,24 @@ router.get('/', async (req, res) => {
         a.xmdg005,
         k.pmaal004,
         b.xmdh001,
-
-        (
-            NVL(TO_NUMBER(REGEXP_SUBSTR(b.xmdh015, '[0-9]+')), 0) / 1000
-        ) * NVL(b.xmdh016, 0) AS calc_qty,
         
-        ( 
+        CASE
+            WHEN b.xmdh015 = 'KG' THEN
+         NVL(b.xmdh016, 0)/1000
+        
+        ELSE (
             NVL(TO_NUMBER(REGEXP_SUBSTR(b.xmdh015, '[0-9]+')), 0) / 1000
-        ) AS Unit,
+        ) * NVL(b.xmdh016, 0) 
+        
+        END AS calc_qty,
+        
+         CASE
+            WHEN b.xmdh015 = 'KG' THEN 1
+        
+        ELSE( 
+            NVL(TO_NUMBER(REGEXP_SUBSTR(b.xmdh015, '[0-9]+')), 0) / 1000
+        ) 
+        END AS Unit,
 
         b.xmdh023,
         a.xmdg017,
