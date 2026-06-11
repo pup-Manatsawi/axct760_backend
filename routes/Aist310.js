@@ -138,6 +138,7 @@ LEFT JOIN (
 WHERE a.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND a.isafstus = 'Y'
+  AND a.isafent = '666'
 
 GROUP BY
     TO_CHAR(a.isaf014, 'DD Mon YYYY', 'NLS_DATE_LANGUAGE=ENGLISH'),
