@@ -285,7 +285,8 @@ GROUP BY
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
     g.xmda033
 
-ORDER BY a.isaf011;
+ORDER BY 
+a.isaf011
     `;
 
     const result = await connection.execute(
