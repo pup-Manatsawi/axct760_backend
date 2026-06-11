@@ -43,7 +43,85 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-     SELECT
+    WITH b_agg AS (
+    SELECT 
+        isagdocno,
+        isag004,
+        isag010,
+        isag017,
+        isag014,
+        isag009,
+        isag016,
+        isag002,
+        isag019,
+        isag101,
+
+        SUM(isag103) AS isag103,
+        SUM(isag104) AS isag104,
+        SUM(isag105) AS isag105
+
+    FROM isag_t
+    WHERE isagent = '666'
+    GROUP BY 
+        isagdocno,
+        isag004,
+        isag010,
+        isag017,
+        isag014,
+        isag009,
+        isag016,
+        isag002,
+        isag019,
+        isag101
+),
+
+-- ✅ xmdl กันซ้ำ
+e_agg AS (
+    SELECT 
+        xmdldocno,
+        xmdl003,
+        MAX(xmdl001) AS xmdl001
+    FROM xmdl_t
+    WHERE xmdlent = '666'
+    GROUP BY xmdldocno, xmdl003
+),
+
+-- ✅ xmdh กันซ้ำ
+f_agg AS (
+    SELECT 
+        xmdhdocno,
+        xmdh001,
+        MAX(xmdh015) AS xmdh015
+    FROM xmdh_t
+    WHERE xmdhent = '666'
+    GROUP BY xmdhdocno, xmdh001
+),
+
+-- ✅ FIX ตัวคูณจริง (xmda)
+g_agg AS (
+    SELECT xmdadocno, xmda033
+    FROM (
+        SELECT 
+            xmdadocno,
+            xmda033,
+            ROW_NUMBER() OVER (
+                PARTITION BY xmdadocno 
+                ORDER BY xmda033 DESC
+            ) rn
+        FROM xmda_t
+    )
+    WHERE rn = 1
+),
+
+h AS (
+    SELECT xrce054,
+           LISTAGG(xrce003 || ',' || xrcedocno)
+               WITHIN GROUP (ORDER BY xrcedocno) AS list_docno
+    FROM xrce_t
+    GROUP BY xrce054
+)
+
+SELECT
     TO_CHAR(a.isaf014, 'DD Mon YYYY', 'NLS_DATE_LANGUAGE=ENGLISH') AS formatted_date,
     a.isaf011,
 
@@ -80,10 +158,10 @@ router.get('/', async (req, res) => {
     a.isaf101,
     a.isaf100,
     SUM(b.isag004) AS isag004,
-    
+
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
-         WHEN a.isaf011 LIKE 'CN%' THEN b.isag014
+        WHEN a.isaf011 LIKE 'CN%' THEN b.isag014
         ELSE e.xmdl001
     END AS xmdl001,
 
@@ -93,9 +171,8 @@ router.get('/', async (req, res) => {
 
 FROM isaf_t a
 
-LEFT JOIN isag_t b
+LEFT JOIN b_agg b
     ON a.isafdocno = b.isagdocno
-    AND b.isagent = '666'
 
 LEFT JOIN pmaa_t c
     ON a.isaf002 = c.pmaa001
@@ -107,33 +184,20 @@ LEFT JOIN pmao_t d
     AND d.pmao004 = b.isag016
     AND d.pmaoent = '666'
 
-LEFT JOIN xmdl_t e
+LEFT JOIN e_agg e
     ON b.isag002 = e.xmdldocno
     AND b.isag019 = e.xmdl003
-    AND e.xmdlent = '666'
 
-LEFT JOIN xmdh_t f
+LEFT JOIN f_agg f
     ON e.xmdl001 = f.xmdhdocno
     AND e.xmdl003 = f.xmdh001
-    AND f.xmdhent = '666'
-
-LEFT JOIN (
-    SELECT xrce054,
-           LISTAGG(xrce003 || ',' || xrcedocno)
-               WITHIN GROUP (ORDER BY xrcedocno) AS list_docno
-    FROM xrce_t
-    GROUP BY xrce054
-) h
-ON h.xrce054 = a.isaf011
 
 
-LEFT JOIN (
-    SELECT xmdadocno, MAX(xmda033) AS xmda033
-    FROM xmda_t
-    GROUP BY xmdadocno
-) g
-    ON f.xmdh001 = g.xmdadocno
-    
+LEFT JOIN g_agg g
+    ON g.xmdadocno = f.xmdhdocno   
+
+LEFT JOIN h
+    ON h.xrce054 = a.isaf011
 
 WHERE a.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
@@ -171,21 +235,18 @@ GROUP BY
     b.isag101,
     a.isaf101,
     a.isaf100,
-    b.isag004,
-    
-
 
     CASE 
-    WHEN a.isaf011 LIKE 'F%' THEN h.list_docno
-    WHEN a.isaf011 LIKE 'CN%' THEN b.isag014
-    ELSE e.xmdl001
-END,
+        WHEN a.isaf011 LIKE 'F%' THEN h.list_docno
+        WHEN a.isaf011 LIKE 'CN%' THEN b.isag014
+        ELSE e.xmdl001
+    END,
 
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
     g.xmda033
 
-ORDER BY
-isaf011
+ORDER BY 
+a.isaf011
     `;
 
     const result = await connection.execute(
