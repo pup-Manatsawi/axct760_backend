@@ -93,7 +93,6 @@ f_agg AS (
     GROUP BY xmdhdocno, xmdh001
 ),
 
-
 g_agg AS (
     SELECT xmdadocno, xmda033
     FROM (
@@ -145,19 +144,58 @@ SELECT
 
     a.isaf021,
     a.isaf002,
-    b.isag101,
+    
+    
+   -- b.isag101,
+        
+    CASE
+    WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
+         AND TRIM(a.ISAFUA001) = '008'
+    THEN -NVL(b.isag101,0)
+    ELSE NVL(b.isag101,0)
+    END AS isag101,
+    
+    SUM(
+    CASE 
+        WHEN a.isaf011 LIKE 'CN%' THEN -b.isag103
+        ELSE b.isag103
+    END
+    )AS isag103,
 
-
-    SUM(b.isag103) AS isag103,
-    SUM(b.isag104) AS isag104,
-    SUM(b.isag105) AS isag105,
+ SUM(
+    CASE 
+        WHEN a.isaf011 LIKE 'CN%' THEN -b.isag104
+        ELSE b.isag104
+    END
+    )AS isag104,
+    
+     SUM(
+    CASE 
+        WHEN a.isaf011 LIKE 'CN%' THEN -b.isag105
+        ELSE b.isag105
+    END
+    )AS isag105,
+        
+        
+   /* 
+   SUM(b.isag103) AS isag103,
+   SUM(b.isag104) AS isag104,
+    SUM(b.isag105) AS isag105,*/
 
     a.isaf101,
     a.isaf100,
 
+   -- SUM(b.isag004) AS isag004,
+    SUM(
+    CASE
+        WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
+             AND TRIM(a.ISAFUA001) = '005'
+        THEN -NVL(b.isag004,0)
+        ELSE NVL(b.isag004,0)
+    END
+) AS isag004,
 
-    SUM(b.isag004) AS isag004,
-
+    --LISTAGG(b.isag004, ',') WITHIN GROUP (ORDER BY b.isag004) AS debug_isag004,
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
@@ -192,7 +230,7 @@ LEFT JOIN f_agg f
     ON e.xmdl001 = f.xmdhdocno
     AND e.xmdl003 = f.xmdh001
 
-
+-- ✅ KEY ที่ถูก + ไม่เบิ้ล
 LEFT JOIN g_agg g
     ON g.xmdadocno = f.xmdh001
 
@@ -235,6 +273,8 @@ GROUP BY
     b.isag101,
     a.isaf101,
     a.isaf100,
+    a.isaf011,
+    a.ISAFUA001,
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno
@@ -245,7 +285,7 @@ GROUP BY
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
     g.xmda033
 
-ORDER BY a.isaf011
+ORDER BY a.isaf011;
     `;
 
     const result = await connection.execute(
