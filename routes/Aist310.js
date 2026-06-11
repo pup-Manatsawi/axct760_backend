@@ -93,7 +93,7 @@ f_agg AS (
     GROUP BY xmdhdocno, xmdh001
 ),
 
--- ✅ FIX สำคัญ: กัน xmda ซ้ำ แต่ยังใช้ key ที่ match จริง
+
 g_agg AS (
     SELECT xmdadocno, xmda033
     FROM (
@@ -147,7 +147,7 @@ SELECT
     a.isaf002,
     b.isag101,
 
-    -- ✅ SUM ไม่เบิ้ล
+
     SUM(b.isag103) AS isag103,
     SUM(b.isag104) AS isag104,
     SUM(b.isag105) AS isag105,
@@ -155,10 +155,9 @@ SELECT
     a.isaf101,
     a.isaf100,
 
-    -- ✅ currency ไม่แตก
+
     SUM(b.isag004) AS isag004,
 
-    LISTAGG(b.isag004, ',') WITHIN GROUP (ORDER BY b.isag004) AS debug_isag004,
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
@@ -193,7 +192,7 @@ LEFT JOIN f_agg f
     ON e.xmdl001 = f.xmdhdocno
     AND e.xmdl003 = f.xmdh001
 
--- ✅ KEY ที่ถูก + ไม่เบิ้ล
+
 LEFT JOIN g_agg g
     ON g.xmdadocno = f.xmdh001
 
