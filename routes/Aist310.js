@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-    WITH b_agg AS (
+     WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -114,6 +114,14 @@ h AS (
            WITHIN GROUP (ORDER BY xrcedocno) AS list_docno
     FROM xrce_t
     GROUP BY xrce054
+),
+i_agg AS (
+    SELECT 
+        xmdkdocno,
+        MAX(xmdk082) AS xmdk082
+    FROM xmdk_t
+    WHERE xmdkent = '666'
+    GROUP BY xmdkdocno
 )
 
 SELECT
@@ -148,12 +156,18 @@ SELECT
     
    -- b.isag101,
         
-    CASE
+   /* CASE
     WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
          AND TRIM(a.ISAFUA001) = '008'
     THEN -NVL(b.isag101,0)
     ELSE NVL(b.isag101,0)
-    END AS isag101,
+    END AS isag101,*/
+    SUM(
+    CASE 
+        WHEN a.isaf011 LIKE 'CN%' THEN -b.isag101
+        ELSE b.isag101
+    END
+    )AS isag101,
     
     SUM(
     CASE 
@@ -189,7 +203,7 @@ SELECT
     SUM(
     CASE
         WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
-             AND TRIM(a.ISAFUA001) = '005'
+             AND TRIM(i.xmdk082) IN ('1','2','3')
         THEN -NVL(b.isag004,0)
         ELSE NVL(b.isag004,0)
     END
@@ -206,6 +220,7 @@ SELECT
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 AS Unit,
 
     g.xmda033
+    /*i.xmdk082*/
 
 FROM isaf_t a
 
@@ -236,6 +251,9 @@ LEFT JOIN g_agg g
 
 LEFT JOIN h
     ON h.xrce054 = a.isaf011
+    
+LEFT JOIN i_agg i
+    ON b.isag002 = i.xmdkdocno
 
 WHERE a.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
@@ -270,7 +288,7 @@ GROUP BY
 
     a.isaf021,
     a.isaf002,
-    b.isag101,
+  
     a.isaf101,
     a.isaf100,
     a.isaf011,
@@ -284,6 +302,7 @@ GROUP BY
 
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
     g.xmda033
+   /*  i.xmdk082*/
 
 ORDER BY 
 a.isaf011
