@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-     WITH b_agg AS (
+      WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -122,6 +122,20 @@ i_agg AS (
     FROM xmdk_t
     WHERE xmdkent = '666'
     GROUP BY xmdkdocno
+),
+
+ ooan_fix AS (
+    SELECT 
+        ooan004,
+        ooan002,  -- 👈 เพิ่มตัวนี้
+        LAST_VALUE(ooan005 IGNORE NULLS) 
+        OVER (
+            PARTITION BY ooan002   -- 👈 สำคัญมาก
+            ORDER BY ooan004
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS ooan005
+    FROM ooan_t
+    WHERE ooanent = '666'
 )
 
 SELECT
@@ -195,9 +209,9 @@ SELECT
    SUM(b.isag103) AS isag103,
    SUM(b.isag104) AS isag104,
     SUM(b.isag105) AS isag105,*/
-
-    a.isaf101,
-    a.isaf100,
+-----  RATE ------
+   /* a.isaf101,
+    a.isaf100,*/
 
    -- SUM(b.isag004) AS isag004,
     SUM(
@@ -219,8 +233,47 @@ SELECT
 
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 AS Unit,
 
-    g.xmda033
+    g.xmda033,
     /*i.xmdk082*/
+    j.ooan005,
+    
+    CASE
+    WHEN j.ooan002 IN ('USD','THB') THEN
+        SUM(
+            CASE 
+                WHEN a.isaf011 LIKE 'CN%' THEN -b.isag103
+                ELSE b.isag103
+            END
+        )
+        *
+        (CASE 
+            WHEN j.ooan002 = 'USD' 
+                THEN NULLIF(j.ooan005,0)
+            WHEN j.ooan002 = 'THB' 
+                THEN 1 / NULLIF(j.ooan005,0)
+        END)
+    ELSE NULL
+END AS ratexx
+
+/*TO_CHAR(
+    SUM(
+        CASE 
+            WHEN a.isaf011 LIKE 'CN%' THEN -b.isag103
+            ELSE b.isag103
+        END
+    )
+)
+||
+' * ' ||
+CASE
+    WHEN a.isaf100 = 'USD'
+        THEN TO_CHAR(j.ooan005)
+
+    WHEN a.isaf100 = 'THB'
+        THEN '1/' || TO_CHAR(j.ooan005)
+END
+AS rate_formula*/
+   
 
 FROM isaf_t a
 
@@ -254,7 +307,20 @@ LEFT JOIN h
     
 LEFT JOIN i_agg i
     ON b.isag002 = i.xmdkdocno
-
+    
+LEFT JOIN LATERAL (
+     SELECT oo.ooan005, oo.ooan002
+    FROM ooan_fix oo
+    WHERE oo.ooan004 <= a.isaf014
+      AND oo.ooan002 = 'USD'  -- 👈 key จริง
+    ORDER BY oo.ooan004 DESC
+    FETCH FIRST 1 ROW ONLY
+) j ON 1=1
+/*LEFT JOIN ooan_t j
+    ON j.ooan004 = a.isaf014
+    AND j.ooan002 = 'USD'
+    AND j.ooanent = '666'*/
+    
 WHERE a.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND a.isafstus = 'Y'
@@ -291,8 +357,9 @@ GROUP BY
   
     a.isaf101,
     a.isaf100,
-    a.isaf011,
+    /*a.isaf011,*/
     a.ISAFUA001,
+    
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno
@@ -301,7 +368,9 @@ GROUP BY
     END,
 
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
-    g.xmda033
+     j.ooan005,
+     j.ooan002,
+g.xmda033
    /*  i.xmdk082*/
 
 ORDER BY 
