@@ -176,6 +176,8 @@ SELECT
     THEN -NVL(b.isag101,0)
     ELSE NVL(b.isag101,0)
     END AS isag101,*/
+
+
     SUM(
     CASE 
         WHEN a.isaf011 LIKE 'CN%' THEN -b.isag101
@@ -214,6 +216,7 @@ SELECT
     a.isaf100,*/
 
    -- SUM(b.isag004) AS isag004,
+   
     SUM(
     CASE
         WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
@@ -248,9 +251,9 @@ SELECT
         
         (CASE 
             WHEN j.ooan002 = 'USD' 
-                THEN * NULLIF(j.ooan005,0)
+                THEN NULLIF(j.ooan005,0)
             WHEN j.ooan002 = 'THB' 
-                THEN / NULLIF(j.ooan005,0)
+                THEN 1 / NULLIF(j.ooan005,0)
         END)
     ELSE NULL
 END AS ratexx
