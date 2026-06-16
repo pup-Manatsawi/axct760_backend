@@ -245,12 +245,12 @@ SELECT
                 ELSE b.isag103
             END
         )
-        *
+        
         (CASE 
             WHEN j.ooan002 = 'USD' 
-                THEN NULLIF(j.ooan005,0)
+                THEN * NULLIF(j.ooan005,0)
             WHEN j.ooan002 = 'THB' 
-                THEN 1 / NULLIF(j.ooan005,0)
+                THEN / NULLIF(j.ooan005,0)
         END)
     ELSE NULL
 END AS ratexx
