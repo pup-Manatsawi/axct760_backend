@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-      WITH b_agg AS (
+       WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -127,10 +127,10 @@ i_agg AS (
  ooan_fix AS (
     SELECT 
         ooan004,
-        ooan002,  -- 👈 เพิ่มตัวนี้
+        ooan002,  
         LAST_VALUE(ooan005 IGNORE NULLS) 
         OVER (
-            PARTITION BY ooan002   -- 👈 สำคัญมาก
+            PARTITION BY ooan002   
             ORDER BY ooan004
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ) AS ooan005
@@ -167,15 +167,6 @@ SELECT
     a.isaf021,
     a.isaf002,
     
-    
-   -- b.isag101,
-        
-   /* CASE
-    WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
-         AND TRIM(a.ISAFUA001) = '008'
-    THEN -NVL(b.isag101,0)
-    ELSE NVL(b.isag101,0)
-    END AS isag101,*/
 
 
     SUM(
@@ -206,17 +197,8 @@ SELECT
     END
     )AS isag105,
         
-        
-   /* 
-   SUM(b.isag103) AS isag103,
-   SUM(b.isag104) AS isag104,
-    SUM(b.isag105) AS isag105,*/
------  RATE ------
-   /* a.isaf101,
-    a.isaf100,*/
-
-   -- SUM(b.isag004) AS isag004,
    
+----  ตัวอย่างการคำนวณแบบมีเงื่อนไข (เช่น ถ้าเอกสารเป็น CN ให้ค่าติดลบ) ----
     SUM(
     CASE
         WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
@@ -225,8 +207,6 @@ SELECT
         ELSE NVL(b.isag004,0)
     END
 ) AS isag004,
-
-    --LISTAGG(b.isag004, ',') WITHIN GROUP (ORDER BY b.isag004) AS debug_isag004,
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
@@ -237,26 +217,31 @@ SELECT
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 AS Unit,
 
     g.xmda033,
-    /*i.xmdk082*/
     j.ooan005,
-    
+
+
+-----คำนวณเรทแบบใหม่ (ใช้ LATERAL JOIN แทน)------
+    ROUND(
     CASE
-    WHEN j.ooan002 IN ('USD','THB') THEN
+    WHEN a.isaf100 = 'USD' THEN
         SUM(
             CASE 
-                WHEN a.isaf011 LIKE 'CN%' THEN -b.isag103
-                ELSE b.isag103
+                WHEN a.isaf011 LIKE 'CN%' THEN -NVL(b.isag103,0)
+                ELSE NVL(b.isag103,0)
             END
-        )
-        
-        (CASE 
-            WHEN j.ooan002 = 'USD' 
-                THEN NULLIF(j.ooan005,0)
-            WHEN j.ooan002 = 'THB' 
-                THEN 1 / NULLIF(j.ooan005,0)
-        END)
-    ELSE NULL
-END AS ratexx
+        ) * NVL(NULLIF(j.ooan005,0),1)
+
+    WHEN a.isaf100 = 'THB' THEN
+        SUM(
+            CASE 
+                WHEN a.isaf011 LIKE 'CN%' THEN -NVL(b.isag103,0)
+                ELSE NVL(b.isag103,0)
+            END
+        ) / NVL(NULLIF(j.ooan005,0),1)
+
+    ELSE 0
+END
+,2) AS ratexx
 
 /*TO_CHAR(
     SUM(
@@ -311,23 +296,23 @@ LEFT JOIN h
 LEFT JOIN i_agg i
     ON b.isag002 = i.xmdkdocno
     
+
+------ จัดการเรื่องแสดงเรท -----
 LEFT JOIN LATERAL (
      SELECT oo.ooan005, oo.ooan002
     FROM ooan_fix oo
     WHERE oo.ooan004 <= a.isaf014
-      AND oo.ooan002 = 'USD'  -- 👈 key จริง
+      AND oo.ooan002 = 'USD'  
     ORDER BY oo.ooan004 DESC
     FETCH FIRST 1 ROW ONLY
 ) j ON 1=1
-/*LEFT JOIN ooan_t j
-    ON j.ooan004 = a.isaf014
-    AND j.ooan002 = 'USD'
-    AND j.ooanent = '666'*/
     
 WHERE a.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND a.isafstus = 'Y'
   AND a.isafent = '666'
+
+
 
 GROUP BY
     TO_CHAR(a.isaf014, 'DD Mon YYYY', 'NLS_DATE_LANGUAGE=ENGLISH'),
@@ -357,10 +342,8 @@ GROUP BY
 
     a.isaf021,
     a.isaf002,
-  
     a.isaf101,
     a.isaf100,
-    /*a.isaf011,*/
     a.ISAFUA001,
     
 
@@ -373,11 +356,10 @@ GROUP BY
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
      j.ooan005,
      j.ooan002,
-g.xmda033
-   /*  i.xmdk082*/
+    g.xmda033
 
 ORDER BY 
-a.isaf011
+    a.isaf011
     `;
 
     const result = await connection.execute(
