@@ -43,13 +43,14 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-       WITH b_agg AS (
+        WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
         isag010,
         isag017,
         isag014,
+        isag015,
         isag009,
         isag016,
         isag002,
@@ -66,6 +67,7 @@ router.get('/', async (req, res) => {
         isag010,
         isag017,
         isag014,
+        isag015,
         isag009,
         isag016,
         isag002,
@@ -168,43 +170,37 @@ SELECT
     a.isaf002,
     
 
-
-    SUM(
     CASE 
-        WHEN a.isaf011 LIKE 'CN%' THEN -b.isag101
+        WHEN b.isag015 LIKE '-1' THEN -b.isag101
         ELSE b.isag101
     END
-    )AS isag101,
+    AS isag101,
     
     SUM(
     CASE 
-        WHEN a.isaf011 LIKE 'CN%' THEN -b.isag103
+        WHEN b.isag015 LIKE '-1' THEN -b.isag103
         ELSE b.isag103
     END
     )AS isag103,
 
  SUM(
     CASE 
-        WHEN a.isaf011 LIKE 'CN%' THEN -b.isag104
+        WHEN b.isag015 LIKE '-1' THEN -b.isag104
         ELSE b.isag104
     END
     )AS isag104,
     
-     SUM(
-    CASE 
-        WHEN a.isaf011 LIKE 'CN%' THEN -b.isag105
-        ELSE b.isag105
-    END
-    )AS isag105,
-        
-   
-----  ตัวอย่างการคำนวณแบบมีเงื่อนไข (เช่น ถ้าเอกสารเป็น CN ให้ค่าติดลบ) ----
     SUM(
     CASE
         WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
              AND TRIM(i.xmdk082) IN ('1','2','3')
         THEN -NVL(b.isag004,0)
+        WHEN TRIM(UPPER(a.isaf011)) LIKE 'W%' 
+        AND b.isag015 LIKE '-1' 
+        THEN -NVL(b.isag004,0)
+        
         ELSE NVL(b.isag004,0)
+         
     END
 ) AS isag004,
 
@@ -226,7 +222,7 @@ SELECT
     WHEN a.isaf100 = 'USD' THEN
         SUM(
             CASE 
-                WHEN a.isaf011 LIKE 'CN%' THEN -NVL(b.isag103,0)
+                WHEN b.isag015 LIKE '-1' THEN -NVL(b.isag103,0)
                 ELSE NVL(b.isag103,0)
             END
         ) * NVL(NULLIF(j.ooan005,0),1)
@@ -234,7 +230,7 @@ SELECT
     WHEN a.isaf100 = 'THB' THEN
         SUM(
             CASE 
-                WHEN a.isaf011 LIKE 'CN%' THEN -NVL(b.isag103,0)
+                WHEN b.isag015 LIKE '-1' THEN -NVL(b.isag103,0)
                 ELSE NVL(b.isag103,0)
             END
         ) / NVL(NULLIF(j.ooan005,0),1)
@@ -356,7 +352,11 @@ GROUP BY
     NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
      j.ooan005,
      j.ooan002,
-    g.xmda033
+    g.xmda033,
+    CASE 
+        WHEN b.isag015 LIKE '-1' THEN -b.isag101
+        ELSE b.isag101
+    END
 
 ORDER BY 
     a.isaf011
