@@ -191,6 +191,13 @@ SELECT
     )AS isag104,
     
     SUM(
+    CASE 
+        WHEN b.isag015 LIKE '-1' THEN -b.isag105
+        ELSE b.isag105
+    END
+    )AS isag105,
+    
+    SUM(
     CASE
         WHEN TRIM(UPPER(a.isaf011)) LIKE 'CN%' 
              AND TRIM(i.xmdk082) IN ('1','2','3')
