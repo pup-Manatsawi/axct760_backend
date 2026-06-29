@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-          WITH b_agg AS (
+           WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -76,14 +76,21 @@ router.get('/', async (req, res) => {
 ),
 
 e_agg AS (
-    SELECT 
-        xmdldocno,
-        xmdl003,
-        xmdl017,
-        MAX(xmdl001) AS xmdl001
-    FROM xmdl_t
-    WHERE xmdlent = '666'
-    GROUP BY xmdldocno, xmdl003,xmdl017
+    SELECT *
+    FROM (
+        SELECT 
+            xmdldocno,
+            xmdl003,
+            xmdl017,
+            xmdl001,
+            ROW_NUMBER() OVER (
+                PARTITION BY xmdldocno, xmdl003
+                ORDER BY xmdl001 DESC
+            ) rn
+        FROM xmdl_t
+        WHERE xmdlent = '666'
+    )
+    WHERE rn = 1
 ),
 k_se AS (
     SELECT 
@@ -96,13 +103,20 @@ k_se AS (
 ),
 
 f_agg AS (
-    SELECT 
-        xmdhdocno,
-        xmdh001,
-        MAX(xmdh015) AS xmdh015
-    FROM xmdh_t
-    WHERE xmdhent = '666'
-    GROUP BY xmdhdocno, xmdh001
+    SELECT *
+    FROM (
+        SELECT 
+            xmdhdocno,
+            xmdh001,
+            xmdh015,
+            ROW_NUMBER() OVER (
+                PARTITION BY xmdhdocno, xmdh001
+                ORDER BY xmdh015 DESC
+            ) rn
+        FROM xmdh_t
+        WHERE xmdhent = '666'
+    )
+    WHERE rn = 1
 ),
 
 g_agg AS (
@@ -180,11 +194,18 @@ SELECT
     a.isaf002,
     
 
-    CASE 
+    /*CASE 
         WHEN b.isag015 = '-1' THEN -b.isag101
         ELSE b.isag101
     END
-    AS isag101,
+    AS isag101,*/
+    
+    MIN(
+  CASE 
+      WHEN b.isag015 = '-1' THEN -b.isag101
+      ELSE b.isag101
+  END
+) AS isag101,
     
     SUM(
     CASE 
@@ -388,11 +409,12 @@ GROUP BY
      CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
         ELSE g.xmda033
-    END,
+    END
+    /*,
     CASE 
         WHEN b.isag015 = '-1' THEN -b.isag101
         ELSE b.isag101
-    END
+    END*/
 
 ORDER BY 
     a.isaf011
