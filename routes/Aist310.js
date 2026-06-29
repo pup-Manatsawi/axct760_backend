@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-         WITH b_agg AS (
+          WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -84,6 +84,15 @@ e_agg AS (
     FROM xmdl_t
     WHERE xmdlent = '666'
     GROUP BY xmdldocno, xmdl003,xmdl017
+),
+k_se AS (
+    SELECT 
+        xmdkdocno,
+        xmdk005,
+        xmdk006
+    FROM xmdk_t
+    WHERE xmdkent = '666'
+    GROUP BY xmdkdocno, xmdk005,xmdk006
 ),
 
 f_agg AS (
@@ -223,8 +232,10 @@ SELECT
         ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
         
         END AS Unit,
-
-    g.xmda033,
+ CASE
+        WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
+        ELSE g.xmda033
+    END As xmda033,
     j.ooan005,
 
 
@@ -304,6 +315,12 @@ LEFT JOIN h
 LEFT JOIN i_agg i
     ON b.isag002 = i.xmdkdocno
     
+LEFT JOIN k_se k
+    ON k.xmdkdocno = e.xmdl001
+    
+LEFT JOIN g_agg l
+    ON l.xmdadocno = k.xmdk006
+    
 
 ------ จัดการเรื่องแสดงเรท -----
 LEFT JOIN LATERAL (
@@ -368,7 +385,10 @@ GROUP BY
         END,
      j.ooan005,
      j.ooan002,
-    g.xmda033,
+     CASE
+        WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
+        ELSE g.xmda033
+    END,
     CASE 
         WHEN b.isag015 = '-1' THEN -b.isag101
         ELSE b.isag101
