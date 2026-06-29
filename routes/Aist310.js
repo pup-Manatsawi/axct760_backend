@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-        WITH b_agg AS (
+         WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -79,10 +79,11 @@ e_agg AS (
     SELECT 
         xmdldocno,
         xmdl003,
+        xmdl017,
         MAX(xmdl001) AS xmdl001
     FROM xmdl_t
     WHERE xmdlent = '666'
-    GROUP BY xmdldocno, xmdl003
+    GROUP BY xmdldocno, xmdl003,xmdl017
 ),
 
 f_agg AS (
@@ -171,28 +172,28 @@ SELECT
     
 
     CASE 
-        WHEN b.isag015 LIKE '-1' THEN -b.isag101
+        WHEN b.isag015 = '-1' THEN -b.isag101
         ELSE b.isag101
     END
     AS isag101,
     
     SUM(
     CASE 
-        WHEN b.isag015 LIKE '-1' THEN -b.isag103
+        WHEN b.isag015 = '-1' THEN -b.isag103
         ELSE b.isag103
     END
     )AS isag103,
 
  SUM(
     CASE 
-        WHEN b.isag015 LIKE '-1' THEN -b.isag104
+        WHEN b.isag015 = '-1' THEN -b.isag104
         ELSE b.isag104
     END
     )AS isag104,
     
     SUM(
     CASE 
-        WHEN b.isag015 LIKE '-1' THEN -b.isag105
+        WHEN b.isag015 = '-1' THEN -b.isag105
         ELSE b.isag105
     END
     )AS isag105,
@@ -203,7 +204,7 @@ SELECT
              AND TRIM(i.xmdk082) IN ('1','2','3')
         THEN -NVL(b.isag004,0)
         WHEN TRIM(UPPER(a.isaf011)) LIKE 'W%' 
-        AND b.isag015 LIKE '-1' 
+        AND b.isag015 = '-1' 
         THEN -NVL(b.isag004,0)
         
         ELSE NVL(b.isag004,0)
@@ -216,8 +217,12 @@ SELECT
         WHEN a.isaf011 LIKE 'CN%' THEN b.isag014
         ELSE e.xmdl001
     END AS xmdl001,
-
-    NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 AS Unit,
+    
+    CASE
+        WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
+        ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
+        
+        END AS Unit,
 
     g.xmda033,
     j.ooan005,
@@ -229,7 +234,7 @@ SELECT
     WHEN a.isaf100 = 'USD' THEN
         SUM(
             CASE 
-                WHEN b.isag015 LIKE '-1' THEN -NVL(b.isag103,0)
+                WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
                 ELSE NVL(b.isag103,0)
             END
         ) * NVL(NULLIF(j.ooan005,0),1)
@@ -237,7 +242,7 @@ SELECT
     WHEN a.isaf100 = 'THB' THEN
         SUM(
             CASE 
-                WHEN b.isag015 LIKE '-1' THEN -NVL(b.isag103,0)
+                WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
                 ELSE NVL(b.isag103,0)
             END
         ) / NVL(NULLIF(j.ooan005,0),1)
@@ -356,12 +361,16 @@ GROUP BY
         ELSE e.xmdl001
     END,
 
-    NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000,
+     CASE
+        WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
+        ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
+        
+        END,
      j.ooan005,
      j.ooan002,
     g.xmda033,
     CASE 
-        WHEN b.isag015 LIKE '-1' THEN -b.isag101
+        WHEN b.isag015 = '-1' THEN -b.isag101
         ELSE b.isag101
     END
 
