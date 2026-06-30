@@ -252,6 +252,7 @@ SELECT
     CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
+        WHEN f.xmdh015 = 'KG' THEN 1
         ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
         
         END AS Unit,
@@ -406,6 +407,7 @@ GROUP BY
      CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
+        WHEN f.xmdh015 = 'KG' THEN 1
         ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
         
         END,
