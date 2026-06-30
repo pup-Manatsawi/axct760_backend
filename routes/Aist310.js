@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-           WITH b_agg AS (
+          WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -244,17 +244,20 @@ SELECT
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
-        WHEN a.isaf011 LIKE 'CN%' THEN b.isag014
+        /*WHEN a.isaf011 LIKE 'CN%' THEN b.isag014*/
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN k.xmdk005
         ELSE e.xmdl001
     END AS xmdl001,
     
     CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
         ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
         
         END AS Unit,
  CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
         ELSE g.xmda033
     END As xmda033,
     j.ooan005,
@@ -395,12 +398,14 @@ GROUP BY
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno
-        WHEN a.isaf011 LIKE 'CN%' THEN b.isag014
+        /*WHEN a.isaf011 LIKE 'CN%' THEN b.isag014*/
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN k.xmdk005
         ELSE e.xmdl001
     END,
 
      CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
         ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
         
         END,
@@ -408,6 +413,7 @@ GROUP BY
      j.ooan002,
      CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
         ELSE g.xmda033
     END
     /*,
