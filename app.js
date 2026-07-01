@@ -44,11 +44,11 @@ const aapq360Router = require('./routes/Aapq360');
 app.use('/api/aapq360', aapq360Router);
 
 // 👇 reload version
-/*app.get('/version', (req, res) => {
+app.get('/version', (req, res) => {
   res.json({
     version: "1.0.0"
   });
-});*/
+});
 
 // React build
 app.use(express.static(path.join(__dirname, 'build')));
