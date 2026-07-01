@@ -136,22 +136,9 @@ g_agg AS (
 
 h AS (
     SELECT xrce054,
-           RTRIM(
-             XMLAGG(
-               XMLELEMENT(e, xrce003 || ',' || xrcedocno || '; ')
-               ORDER BY xrcedocno
-             ).EXTRACT('//text()').getClobVal(),
-             '; '
-           ) AS list_docno
-    FROM (
-        SELECT xrce054, xrce003, xrcedocno,
-               ROW_NUMBER() OVER (
-                   PARTITION BY xrce054 
-                   ORDER BY xrcedocno
-               ) rn
-        FROM xrce_t
-    )
-    WHERE rn <= 50   -- 🔥 สำคัญมาก
+           LISTAGG(xrce003 || ',' || xrcedocno)
+           WITHIN GROUP (ORDER BY xrcedocno) AS list_docno
+    FROM xrce_t
     GROUP BY xrce054
 ),
 i_agg AS (
@@ -256,12 +243,11 @@ SELECT
 ) AS isag004,
 
     CASE 
-    WHEN a.isaf011 LIKE 'F%' 
-        THEN DBMS_LOB.SUBSTR(h.list_docno, 4000, 1)
-    WHEN e.xmdl001 LIKE 'TS-SS%' 
-        THEN k.xmdk005
-    ELSE e.xmdl001
-END AS xmdl001,
+        WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
+        /*WHEN a.isaf011 LIKE 'CN%' THEN b.isag014*/
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN k.xmdk005
+        ELSE e.xmdl001
+    END AS xmdl001,
     
     CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
@@ -412,12 +398,11 @@ GROUP BY
     
 
     CASE 
-    WHEN a.isaf011 LIKE 'F%' 
-        THEN DBMS_LOB.SUBSTR(h.list_docno, 4000, 1)
-    WHEN e.xmdl001 LIKE 'TS-SS%' 
-        THEN k.xmdk005
-    ELSE e.xmdl001
-END,
+        WHEN a.isaf011 LIKE 'F%' THEN h.list_docno
+        /*WHEN a.isaf011 LIKE 'CN%' THEN b.isag014*/
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN k.xmdk005
+        ELSE e.xmdl001
+    END,
 
      CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
