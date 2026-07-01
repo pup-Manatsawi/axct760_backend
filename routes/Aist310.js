@@ -143,7 +143,15 @@ h AS (
              ).EXTRACT('//text()').getClobVal(),
              '; '
            ) AS list_docno
-    FROM xrce_t
+    FROM (
+        SELECT xrce054, xrce003, xrcedocno,
+               ROW_NUMBER() OVER (
+                   PARTITION BY xrce054 
+                   ORDER BY xrcedocno
+               ) rn
+        FROM xrce_t
+    )
+    WHERE rn <= 50   -- 🔥 สำคัญมาก
     GROUP BY xrce054
 ),
 i_agg AS (
