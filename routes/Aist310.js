@@ -193,13 +193,6 @@ SELECT
     a.isaf021,
     a.isaf002,
     
-
-    /*CASE 
-        WHEN b.isag015 = '-1' THEN -b.isag101
-        ELSE b.isag101
-    END
-    AS isag101,*/
-    
     MIN(
   CASE 
       WHEN b.isag015 = '-1' THEN -b.isag101
@@ -244,7 +237,6 @@ SELECT
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno 
-        /*WHEN a.isaf011 LIKE 'CN%' THEN b.isag014*/
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN k.xmdk005
         ELSE e.xmdl001
     END AS xmdl001,
@@ -287,24 +279,6 @@ SELECT
 END
 ,2) AS ratexx
 
-/*TO_CHAR(
-    SUM(
-        CASE 
-            WHEN a.isaf011 LIKE 'CN%' THEN -b.isag103
-            ELSE b.isag103
-        END
-    )
-)
-||
-' * ' ||
-CASE
-    WHEN a.isaf100 = 'USD'
-        THEN TO_CHAR(j.ooan005)
-
-    WHEN a.isaf100 = 'THB'
-        THEN '1/' || TO_CHAR(j.ooan005)
-END
-AS rate_formula*/
    
 
 FROM isaf_t a
@@ -399,7 +373,6 @@ GROUP BY
 
     CASE 
         WHEN a.isaf011 LIKE 'F%' THEN h.list_docno
-        /*WHEN a.isaf011 LIKE 'CN%' THEN b.isag014*/
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN k.xmdk005
         ELSE e.xmdl001
     END,
@@ -418,11 +391,6 @@ GROUP BY
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
         ELSE g.xmda033
     END
-    /*,
-    CASE 
-        WHEN b.isag015 = '-1' THEN -b.isag101
-        ELSE b.isag101
-    END*/
 
 ORDER BY 
     a.isaf011
