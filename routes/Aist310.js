@@ -136,8 +136,12 @@ g_agg AS (
 
 h AS (
     SELECT xrce054,
-           LISTAGG(xrce003 || ',' || xrcedocno)
-           WITHIN GROUP (ORDER BY xrcedocno) AS list_docno
+           RTRIM(
+               XMLAGG(
+                   XMLELEMENT(e, xrce003 || ',' || xrcedocno || ',')
+                   ORDER BY xrcedocno
+               ).EXTRACT('//text()'),
+           ',') AS list_docno
     FROM xrce_t
     GROUP BY xrce054
 ),
