@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-        WITH b_agg AS (
+         WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
