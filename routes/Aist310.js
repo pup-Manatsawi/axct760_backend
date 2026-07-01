@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-         WITH b_agg AS (
+        WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -138,7 +138,9 @@ h AS (
     SELECT xrce054,
            RTRIM(
                XMLAGG(
-                   XMLELEMENT(e, xrce003 || ',' || xrcedocno || ',')
+                   XMLELEMENT(e, 
+                       TO_CLOB(xrce003) || ',' || TO_CLOB(xrcedocno) || ','
+                   )
                    ORDER BY xrcedocno
                ).getClobVal()
            ,',') AS list_docno
