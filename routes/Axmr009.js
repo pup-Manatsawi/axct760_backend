@@ -6,7 +6,7 @@ const { getConnection } = require('../config/db');
 router.get('/', async (req, res) => {
   let connection;
 
-  const { startDate, endDate } = req.query;
+  const { startDate, endDate , xmdg002 } = req.query;
 
   // ✅ 1. check missing
   if (!startDate || !endDate) {
@@ -218,13 +218,17 @@ ON a.xmdg009 = n.oocql002
     WHERE a.xmdg028 >= TO_DATE(:startDate, 'YYYYMMDD')
       AND a.xmdg028 < TO_DATE(:endDate, 'YYYYMMDD') + 1
       AND a.xmdgent = '666'
+      AND (:xmdg002 IS NULL OR a.xmdg002 = :xmdg002)
+  
 
     ORDER BY a.xmdgdocdt ASC
     `;
 
     const result = await connection.execute(
       sql,
-      { startDate: start, endDate: end },
+      { startDate: start, 
+        endDate: end,
+        xmdg002: xmdg002 || null },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
