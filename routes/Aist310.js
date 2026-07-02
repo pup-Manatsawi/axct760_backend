@@ -261,7 +261,15 @@ SELECT
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
         ELSE g.xmda033
     END As xmda033,
-    j.ooan005,
+    
+    CASE
+        WHEN a.isaf100 = 'USD' THEN a.isaf101
+        WHEN a.isaf100 = 'THB' THEN j.ooan005
+        ELSE 0
+    END As ooan005,
+    
+    
+   /* j.ooan005,*/
 
 
 -----คำนวณเรทแบบใหม่ (ใช้ LATERAL JOIN แทน)------
@@ -273,7 +281,7 @@ SELECT
                 WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
                 ELSE NVL(b.isag103,0)
             END
-        ) * NVL(NULLIF(j.ooan005,0),1)
+        ) * NVL(NULLIF(a.isaf101,0),1)
 
     WHEN a.isaf100 = 'THB' THEN
         SUM(
