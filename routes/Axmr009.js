@@ -225,7 +225,7 @@ ON a.xmdg009 = n.oocql002
       AND a.xmdg028 < TO_DATE(:endDate, 'YYYYMMDD') + 1
       AND a.xmdgent = '666'
       AND (:docPattern IS NULL OR a.xmdgdocno LIKE :docPattern)
-      AND a.xmdgstus = 'Y'
+      AND (a.xmdgstus = 'Y' OR a.xmdgstus = 'H')
   
 
     ORDER BY a.xmdgdocdt ASC
