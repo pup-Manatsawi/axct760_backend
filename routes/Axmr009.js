@@ -6,7 +6,7 @@ const { getConnection } = require('../config/db');
 router.get('/', async (req, res) => {
   let connection;
 
-  const { startDate, endDate , xmdgdocno } = req.query;
+  const { startDate, endDate , salesType } = req.query;
 
   // ✅ 1. check missing
   if (!startDate || !endDate) {
@@ -41,6 +41,12 @@ router.get('/', async (req, res) => {
     const end = toOracleDate(endDate);
 
     console.log(`📅 Range: ${startDate} → ${endDate}`);
+    const map = {
+     DOMESTIC: 'TS-NS%',
+     EXPORT: 'TS-NE%'
+    };
+
+    const docPattern = map[salesType] || null;
 
     const sql = `
     SELECT
@@ -218,7 +224,7 @@ ON a.xmdg009 = n.oocql002
     WHERE a.xmdg028 >= TO_DATE(:startDate, 'YYYYMMDD')
       AND a.xmdg028 < TO_DATE(:endDate, 'YYYYMMDD') + 1
       AND a.xmdgent = '666'
-      AND (:xmdgdocno IS NULL OR a.xmdgdocno LIKE :xmdgdocno)
+      AND (:docPattern IS NULL OR a.xmdgdocno LIKE :docPattern)
       AND a.xmdgstus = 'Y'
   
 
@@ -229,7 +235,7 @@ ON a.xmdg009 = n.oocql002
       sql,
       { startDate: start, 
         endDate: end,
-        xmdgdocno: xmdgdocno || null },
+        docPattern: docPattern },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
