@@ -257,8 +257,8 @@ SELECT
         
         END AS Unit,
  CASE
-        WHEN e.xmdl001 LIKE 'TS-SE%' THEN g.xmda033
-        WHEN e.xmdl001 LIKE 'TS-SS%' THEN g.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
         ELSE g.xmda033
     END As xmda033,
     
@@ -269,6 +269,8 @@ SELECT
     END As ooan005,
     
     
+   /* j.ooan005,*/
+
 
 -----คำนวณเรทแบบใหม่ (ใช้ LATERAL JOIN แทน)------
     ROUND(
@@ -321,7 +323,9 @@ LEFT JOIN f_agg f
     ON e.xmdl001 = f.xmdhdocno
     AND e.xmdl003 = f.xmdh001
 
-
+-- ✅ KEY ที่ถูก + ไม่เบิ้ล
+LEFT JOIN g_agg g
+    ON g.xmdadocno = f.xmdh001
 
 LEFT JOIN h
     ON h.xrce054 = a.isaf011
@@ -332,11 +336,8 @@ LEFT JOIN i_agg i
 LEFT JOIN k_se k
     ON k.xmdkdocno = e.xmdl001
     
--- ✅ KEY ที่ถูก + ไม่เบิ้ล
-LEFT JOIN g_agg g
-    ON g.xmdadocno = f.xmdh001
-    AND g.xmdadocno = k.xmdk006
-    
+LEFT JOIN g_agg l
+    ON l.xmdadocno = k.xmdk006
     
 
 ------ จัดการเรื่องแสดงเรท -----
@@ -416,8 +417,8 @@ GROUP BY
      j.ooan005,
      j.ooan002,
      CASE
-        WHEN e.xmdl001 LIKE 'TS-SE%' THEN g.xmda033
-        WHEN e.xmdl001 LIKE 'TS-SS%' THEN g.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
         ELSE g.xmda033
     END,
     b.isag009,
