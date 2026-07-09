@@ -257,8 +257,8 @@ SELECT
         
         END AS Unit,
  CASE
-        WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
-        WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SE%' THEN g.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN g.xmda033
         ELSE g.xmda033
     END As xmda033,
     
@@ -269,8 +269,6 @@ SELECT
     END As ooan005,
     
     
-   /* j.ooan005,*/
-
 
 -----คำนวณเรทแบบใหม่ (ใช้ LATERAL JOIN แทน)------
     ROUND(
@@ -293,7 +291,10 @@ SELECT
 
     ELSE 0
 END
-,2) AS ratexx
+,2) AS ratexx,
+b.isag009,
+n.imaa009,
+m.imaf051
 
    
 
@@ -320,9 +321,7 @@ LEFT JOIN f_agg f
     ON e.xmdl001 = f.xmdhdocno
     AND e.xmdl003 = f.xmdh001
 
--- ✅ KEY ที่ถูก + ไม่เบิ้ล
-LEFT JOIN g_agg g
-    ON g.xmdadocno = f.xmdh001
+
 
 LEFT JOIN h
     ON h.xrce054 = a.isaf011
@@ -333,8 +332,11 @@ LEFT JOIN i_agg i
 LEFT JOIN k_se k
     ON k.xmdkdocno = e.xmdl001
     
-LEFT JOIN g_agg l
-    ON l.xmdadocno = k.xmdk006
+-- ✅ KEY ที่ถูก + ไม่เบิ้ล
+LEFT JOIN g_agg g
+    ON g.xmdadocno = f.xmdh001
+    AND g.xmdadocno = k.xmdk006
+    
     
 
 ------ จัดการเรื่องแสดงเรท -----
@@ -346,6 +348,15 @@ LEFT JOIN LATERAL (
     ORDER BY oo.ooan004 DESC
     FETCH FIRST 1 ROW ONLY
 ) j ON 1=1
+
+LEFT JOIN imaf_t m
+    ON m.imaf001 = b.isag009
+    AND imafent = '666'
+    AND imafsite = 'TSIC'
+    
+LEFT JOIN imaa_t n
+    ON n.imaa001 = b.isag009
+    AND n.imaaent = '666'
     
 WHERE a.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.isaf014 < TO_DATE(:endDate, 'YYYYMMDD') + 1
@@ -405,10 +416,13 @@ GROUP BY
      j.ooan005,
      j.ooan002,
      CASE
-        WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
-        WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SE%' THEN g.xmda033
+        WHEN e.xmdl001 LIKE 'TS-SS%' THEN g.xmda033
         ELSE g.xmda033
-    END
+    END,
+    b.isag009,
+    n.imaa009,
+    m.imaf051
 
 ORDER BY 
     a.isaf011
