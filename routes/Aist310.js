@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-         WITH b_agg AS (
+        WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -203,27 +203,72 @@ SELECT
       ELSE b.isag101
   END
 ) AS isag101,
-    
-    SUM(
-    CASE 
-        WHEN b.isag015 = '-1' THEN -b.isag103
-        ELSE b.isag103
-    END
-    )AS isag103,
 
- SUM(
-    CASE 
-        WHEN b.isag015 = '-1' THEN -b.isag104
-        ELSE b.isag104
-    END
-    )AS isag104,
-    
+    ROUND(
+    CASE
+    WHEN a.isaf100 = 'USD' THEN
     SUM(
-    CASE 
-        WHEN b.isag015 = '-1' THEN -b.isag105
-        ELSE b.isag105
+        CASE 
+            WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
+            ELSE NVL(b.isag103,0)
+        END
+            ) * NVL(NULLIF(a.isaf101,0),1)
+
+    WHEN a.isaf100 = 'THB' THEN
+    SUM(
+        CASE 
+            WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
+            ELSE NVL(b.isag103,0)
+        END
+    )
+
+        ELSE 0
     END
-    )AS isag105,
+    ,2) AS isag103,
+    
+   ROUND(
+    CASE
+    WHEN a.isaf100 = 'USD' THEN
+    SUM(
+        CASE 
+            WHEN b.isag015 = '-1' THEN -NVL(b.isag104,0)
+            ELSE NVL(b.isag104,0)
+        END
+            ) * NVL(NULLIF(a.isaf101,0),1)
+
+    WHEN a.isaf100 = 'THB' THEN
+    SUM(
+        CASE 
+            WHEN b.isag015 = '-1' THEN -NVL(b.isag104,0)
+            ELSE NVL(b.isag104,0)
+        END
+    )
+
+        ELSE 0
+    END
+    ,2) AS isag104,
+    
+    ROUND(
+    CASE
+    WHEN a.isaf100 = 'USD' THEN
+    SUM(
+        CASE 
+            WHEN b.isag015 = '-1' THEN -NVL(b.isag105,0)
+            ELSE NVL(b.isag105,0)
+        END
+            ) * NVL(NULLIF(a.isaf101,0),1)
+
+    WHEN a.isaf100 = 'THB' THEN
+    SUM(
+        CASE 
+            WHEN b.isag015 = '-1' THEN -NVL(b.isag105,0)
+            ELSE NVL(b.isag105,0)
+        END
+    )
+
+        ELSE 0
+    END
+    ,2) AS isag105,
     
     SUM(
     CASE
@@ -273,25 +318,25 @@ SELECT
 
 
 -----คำนวณเรทแบบใหม่ (ใช้ LATERAL JOIN แทน)------
-    ROUND(
-    CASE
-    WHEN a.isaf100 = 'USD' THEN
-        SUM(
-            CASE 
-                WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
-                ELSE NVL(b.isag103,0)
-            END
-        ) * NVL(NULLIF(a.isaf101,0),1)
+   ROUND(
+CASE
+WHEN a.isaf100 = 'USD' THEN
+    SUM(
+        CASE 
+            WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
+            ELSE NVL(b.isag103,0)
+        END
+    )
 
-    WHEN a.isaf100 = 'THB' THEN
-        SUM(
-            CASE 
-                WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
-                ELSE NVL(b.isag103,0)
-            END
-        ) / NVL(NULLIF(j.ooan005,0),1)
+WHEN a.isaf100 = 'THB' THEN
+    SUM(
+        CASE 
+            WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
+            ELSE NVL(b.isag103,0)
+        END
+    ) / NVL(NULLIF(j.ooan005,0),1)
 
-    ELSE 0
+ELSE 0
 END
 ,2) AS ratexx,
 b.isag009,
