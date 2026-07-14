@@ -137,11 +137,9 @@ g_agg AS (
 h AS (
     SELECT xrce054,
            XMLAGG(
-               XMLELEMENT(e, 
-                   TO_CLOB(xrce003) || ',' || TO_CLOB(xrcedocno) || ','
-               )
+               XMLELEMENT(e, xrce003 || ',' || xrcedocno || ',')
                ORDER BY xrcedocno
-           ).getClobVal() AS list_docno
+           ).EXTRACT('//text()').getClobVal() AS list_docno
     FROM xrce_t
     GROUP BY xrce054
 ),
