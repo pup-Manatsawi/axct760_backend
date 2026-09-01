@@ -142,6 +142,7 @@ router.get('/', async (req, res) => {
 
         LEFT JOIN apce_t g
          ON g.apce003 = f.apcadocno
+         AND g.apce024 = f.apca018
         AND g.apceent = '666'
 
         LEFT JOIN apda_t h
