@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
         f.apca018,
         f.apcadocno,
         f.apca066,
-        m.isam011,
+        TO_CHAR(m.isam011, 'DD/MM/YYYY') AS ISAM011,
         m.isam025,
         m.isam014,
         f.apca038,
