@@ -43,6 +43,9 @@ app.use('/api/aist310', aist310Router);
 const aapq360Router = require('./routes/Aapq360');
 app.use('/api/aapq360', aapq360Router);
 
+const apmt400Router = require('./routes/Apmt400');
+app.use('/api/apmt400', apmt400Router);
+
 // 👇 reload version
 app.get('/version', (req, res) => {
   res.json({
