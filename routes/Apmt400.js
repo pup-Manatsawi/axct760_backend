@@ -67,7 +67,7 @@ router.get('/', async (req, res) => {
         m.isam025,
         m.isam014,
         f.apca038,
-        TO_CHAR(f.apcadocdt, 'DD/MM/YYYY') AS APCADCDT,
+        TO_CHAR(f.apcadocdt, 'DD/MM/YYYY') AS APCADOCDT,
         f.apca103,
         f.apca104,
         f.apca106,
@@ -185,41 +185,65 @@ router.get('/', async (req, res) => {
     AND a.pmdaent = '666'
 
   
-  GROUP BY 
+    GROUP BY 
     b.pmdl004,
     j.pmaal004,
     a.pmda003,
     k.ooefl003,
     l.ooag011,
     a.pmdadocno,
-    a.pmdadocdt,
+    TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY'), -- แก้ให้ตรงกับ SELECT
     d.total_pmdb006,
     a.pmda022,
     b.pmdldocno,
-    b.pmdldocdt,
+    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'), -- แก้ให้ตรงกับ SELECT
     b.pmdl015,
     c.pmdoseq,
-    c.pmdo011,
-    c.pmdo012,
+    TO_CHAR(c.pmdo011, 'DD/MM/YYYY'),   -- แก้ให้ตรงกับ SELECT
+    TO_CHAR(c.pmdo012, 'DD/MM/YYYY'),   -- แก้ให้ตรงกับ SELECT
     f.apca018,
     f.apcadocno,
     f.apca066,
-    m.isam011,
+    TO_CHAR(m.isam011, 'DD/MM/YYYY'),   -- แก้ให้ตรงกับ SELECT
     m.isam025,
     m.isam014,
     f.apca038,
-    f.apcadocdt,
+    TO_CHAR(f.apcadocdt, 'DD/MM/YYYY'), -- ตรงแล้ว
     f.apca103,
     f.apca104,
     f.apca106,
     f.apca108,
-    f.apca010,
-    APDASTUS,
+    TO_CHAR(f.apca010, 'DD/MM/YYYY'),   -- ตรงแล้ว
+    CASE                                -- ตรงแล้ว
+        WHEN h.apdastus = 'Y' THEN 'Confirmed'
+        WHEN h.apdastus = 'X' THEN 'Voided'
+        WHEN h.apdastus = 'N' THEN 'Not Confirmed'
+        WHEN h.apdastus = 'A' THEN 'Approved'
+        WHEN h.apdastus = 'D' THEN 'Withdraw'
+        WHEN h.apdastus = 'R' THEN 'Rejected'
+        WHEN h.apdastus = 'W' THEN 'Approving'
+        ELSE ''
+    END,
     h.apdadocno,
     h.apda014,
-    h.apdadocdt,
+    TO_CHAR(h.apdadocdt, 'DD/MM/YYYY'), -- ตรงแล้ว
     n.apce119,
-    APDE006,
+    CASE                                -- ตรงแล้ว
+        WHEN i.apde006 = '10' THEN '10:Cash and On-Demand Remittance'
+        WHEN i.apde006 = '20' THEN '20:Bank Remittance'
+        WHEN i.apde006 = '30' THEN '30:Note Type'
+        WHEN i.apde006 = '40' THEN '40:Valuable coupons (vouchers) Type'
+        WHEN i.apde006 = '50' THEN '50:Bank Card/Credit Card'
+        WHEN i.apde006 = '60' THEN '60:Value-Added Type'
+        WHEN i.apde006 = '70' THEN '70:Bank L/C'
+        WHEN i.apde006 = '90' THEN '90:Other type'
+        WHEN i.apde006 = '91' THEN '91:Sell on Credit'
+        WHEN i.apde006 = '92' THEN '92:Cashier Collection'
+        WHEN i.apde006 = '80' THEN '80:Third party payment'
+        WHEN i.apde006 = '99' THEN '99:Repayment of Pledge Note Cashing'
+        WHEN i.apde006 = '94' THEN '94:Advance Collection'
+        ELSE ''
+    END,
     i.apde008,
     i.apde039,
     i.apde040,
