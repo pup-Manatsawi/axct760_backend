@@ -50,16 +50,16 @@ router.get('/', async (req, res) => {
         k.ooefl003,
         l.ooag011,
         a.pmdadocno,
-        a.pmdadocdt,
+        TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY') AS PMDADOCDT,
         d.total_pmdb006,
         a.pmda022,
         b.pmdldocno,
-        b.pmdldocdt,
+        TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLLDOCDT,
         SUM(c.pmdo033) AS total_pmdo033,
         b.pmdl015,
         c.pmdoseq,
-        c.pmdo011,
-        c.pmdo012,
+        TO_CHAR(c.pmdo011, 'DD/MM/YYYY') AS PMDO011,
+        TO_CHAR(c.pmdo012, 'DD/MM/YYYY') AS PMDO012,
         f.apca018,
         f.apcadocno,
         f.apca066,
@@ -67,12 +67,12 @@ router.get('/', async (req, res) => {
         m.isam025,
         m.isam014,
         f.apca038,
-        f.apcadocdt,
+        TO_CHAR(f.apcadocdt, 'DD/MM/YYYY') AS APCADCDT,
         f.apca103,
         f.apca104,
         f.apca106,
         f.apca108,
-        f.apca010,
+        TO_CHAR(f.apca010, 'DD/MM/YYYY') AS APCA010,
         CASE
             WHEN h.apdastus = 'Y' THEN 'Confirmed'
             WHEN h.apdastus = 'X' THEN 'Voided'
@@ -86,7 +86,7 @@ router.get('/', async (req, res) => {
     
         h.apdadocno,
         h.apda014,
-        h.apdadocdt,
+        TO_CHAR(h.apdadocdt, 'DD/MM/YYYY') AS APDADCDT,
         n.apce119,
     
         CASE
