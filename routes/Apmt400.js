@@ -86,7 +86,7 @@ router.get('/', async (req, res) => {
     
         h.apdadocno,
         h.apda014,
-        TO_CHAR(h.apdadocdt, 'DD/MM/YYYY') AS APDADCDT,
+        TO_CHAR(h.apdadocdt, 'DD/MM/YYYY') AS APDADOCDT,
         n.apce119,
     
         CASE
