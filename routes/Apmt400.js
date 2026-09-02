@@ -6,7 +6,7 @@ const { getConnection } = require('../config/db');
 router.get('/', async (req, res) => {
   let connection;
 
-  const { startDate, endDate } = req.query;
+  const { startDate, endDate, status } = req.query;
 
   // ✅ 1. check missing
   if (!startDate || !endDate) {
@@ -40,7 +40,18 @@ router.get('/', async (req, res) => {
     const start = toOracleDate(startDate);
     const end = toOracleDate(endDate);
 
-    console.log(`📅 Range: ${startDate} → ${endDate}`);
+    console.log(`📅 Range: ${startDate} → ${endDate} | Status: ${status}` || 'All');
+
+    // Dynamic Filter ตามค่า status ที่รับเข้ามา
+    let statusFilter = '';
+    if (status === 'NoPo') {
+      statusFilter = 'AND b.pmdl008 IS NULL';
+    } else if (status === 'NoAp') {
+      statusFilter = 'AND b.pmdldocno IS NULL';
+    } else if (status === 'NoWriteOff') {
+      statusFilter = 'AND h.apdadocno IS NULL';
+    }
+
 
     const sql = `
     SELECT
@@ -184,6 +195,7 @@ router.get('/', async (req, res) => {
     AND a.pmdadocdt < TO_DATE(:endDate, 'YYYYMMDD') + 1
     AND a.pmdastus = 'Y'
     AND a.pmdaent = '666'
+    ${statusFilter}
 
   
     GROUP BY 
