@@ -45,9 +45,9 @@ router.get('/', async (req, res) => {
     // Dynamic Filter ตามค่า status ที่รับเข้ามา
     let statusFilter = '';
     if (status === 'NoPo') {
-      statusFilter = 'AND b.pmdl008 IS NULL';
-    } else if (status === 'NoAp') {
       statusFilter = 'AND b.pmdldocno IS NULL';
+    } else if (status === 'NoAp') {
+      statusFilter = 'AND f.apcadocno IS NULL';
     } else if (status === 'NoWriteOff') {
       statusFilter = 'AND h.apdadocno IS NULL';
     }
@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
         d.total_pmdb006,
         a.pmda022,
         b.pmdldocno,
-        TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLLDOCDT,
+        TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLDOCDT,
         SUM(c.pmdo033) AS total_pmdo033,
         b.pmdl015,
         c.pmdoseq,
@@ -205,29 +205,29 @@ router.get('/', async (req, res) => {
     k.ooefl003,
     l.ooag011,
     a.pmdadocno,
-    TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY'), -- แก้ให้ตรงกับ SELECT
+    TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY'), 
     d.total_pmdb006,
     a.pmda022,
     b.pmdldocno,
-    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'), -- แก้ให้ตรงกับ SELECT
+    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'), 
     b.pmdl015,
     c.pmdoseq,
-    TO_CHAR(c.pmdo011, 'DD/MM/YYYY'),   -- แก้ให้ตรงกับ SELECT
-    TO_CHAR(c.pmdo012, 'DD/MM/YYYY'),   -- แก้ให้ตรงกับ SELECT
+    TO_CHAR(c.pmdo011, 'DD/MM/YYYY'),   
+    TO_CHAR(c.pmdo012, 'DD/MM/YYYY'),   
     f.apca018,
     f.apcadocno,
     f.apca066,
-    TO_CHAR(m.isam011, 'DD/MM/YYYY'),   -- แก้ให้ตรงกับ SELECT
+    TO_CHAR(m.isam011, 'DD/MM/YYYY'),   
     m.isam025,
     m.isam014,
     f.apca038,
-    TO_CHAR(f.apcadocdt, 'DD/MM/YYYY'), -- ตรงแล้ว
+    TO_CHAR(f.apcadocdt, 'DD/MM/YYYY'), 
     f.apca103,
     f.apca104,
     f.apca106,
     f.apca108,
-    TO_CHAR(f.apca010, 'DD/MM/YYYY'),   -- ตรงแล้ว
-    CASE                                -- ตรงแล้ว
+    TO_CHAR(f.apca010, 'DD/MM/YYYY'),   
+    CASE                                
         WHEN h.apdastus = 'Y' THEN 'Confirmed'
         WHEN h.apdastus = 'X' THEN 'Voided'
         WHEN h.apdastus = 'N' THEN 'Not Confirmed'
@@ -239,9 +239,9 @@ router.get('/', async (req, res) => {
     END,
     h.apdadocno,
     h.apda014,
-    TO_CHAR(h.apdadocdt, 'DD/MM/YYYY'), -- ตรงแล้ว
+    TO_CHAR(h.apdadocdt, 'DD/MM/YYYY'), 
     n.apce119,
-    CASE                                -- ตรงแล้ว
+    CASE                                
         WHEN i.apde006 = '10' THEN '10:Cash and On-Demand Remittance'
         WHEN i.apde006 = '20' THEN '20:Bank Remittance'
         WHEN i.apde006 = '30' THEN '30:Note Type'
