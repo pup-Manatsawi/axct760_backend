@@ -63,6 +63,7 @@ router.get('/', async (req, res) => {
         a.pmdadocno,
         TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY') AS PMDADOCDT,
         d.total_pmdb006,
+        o.imaal003,
         a.pmda022,
         b.pmdldocno,
         TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLDOCDT,
@@ -190,6 +191,15 @@ router.get('/', async (req, res) => {
             AND n.apce003 = f.apcadocno
             AND n.apce024 = f.apca018
             AND n.apceent = '666'
+
+        LEFT JOIN pmdb_t p
+          ON p.pmdbdocno = a.pmdadocno
+          AND a.pmdaent = '666'
+   
+        LEFT JOIN imaal_t o
+          ON o.imaalent = '666'
+          AND o.imaal002 = 'en_US'
+          AND o.imaal001 = p.pmdb004
      
   where a.pmdadocdt >= TO_DATE(:startDate, 'YYYYMMDD')
     AND a.pmdadocdt < TO_DATE(:endDate, 'YYYYMMDD') + 1
@@ -207,6 +217,7 @@ router.get('/', async (req, res) => {
     a.pmdadocno,
     TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY'), 
     d.total_pmdb006,
+    o.imaal003,
     a.pmda022,
     b.pmdldocno,
     TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'), 
