@@ -264,6 +264,7 @@ router.get('/', async (req, res) => {
     
     
     ORDER BY 
+    PMDADOCDT,
     a.pmdadocno,
     f.apca018
 
