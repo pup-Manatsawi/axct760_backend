@@ -275,7 +275,7 @@ router.get('/', async (req, res) => {
     
     
     ORDER BY 
-     PMDADOCDT ASC,
+     TO_DATE(PMDADOCDT, 'DD/MM/YYYY') ASC,
      a.pmdadocno ,
      f.apca018 
 
