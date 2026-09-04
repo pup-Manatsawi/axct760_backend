@@ -275,12 +275,10 @@ router.get('/', async (req, res) => {
     
     
     ORDER BY 
-     TO_DATE(PMDADOCDT, 'YYYYMMDD'),
-      a.pmdadocno,
-      f.apca018
+     PMDADOCDT ASC,
+      a.pmdadocno ASC,
+      f.apca018 ASC
 
-
-       
     `;
 
     const result = await connection.execute(
