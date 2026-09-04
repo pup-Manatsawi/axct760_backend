@@ -122,7 +122,7 @@ router.get('/', async (req, res) => {
         i.apde039,
         i.apde040,
         n.apce010
-        
+
         FROM pmda_t a
      
         LEFT JOIN pmdl_t b
@@ -137,10 +137,11 @@ router.get('/', async (req, res) => {
         LEFT JOIN (
             SELECT 
                 pmdbdocno, 
+                pmdb004,
                 SUM(pmdb006) AS total_pmdb006
             FROM pmdb_t
             WHERE pmdbent = '666'
-            GROUP BY pmdbdocno
+            GROUP BY pmdbdocno,pmdb004
                 ) d ON d.pmdbdocno = a.pmdadocno
 
         LEFT JOIN apcb_t e
