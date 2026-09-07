@@ -193,6 +193,7 @@ WHERE a.pmdadocdt >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.pmdadocdt < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND a.pmdastus = 'Y'
   AND a.pmdaent = '666'
+   ${statusFilter}
 
 GROUP BY 
     b.pmdl004,
@@ -263,7 +264,7 @@ GROUP BY
 ORDER BY 
     a.pmdadocdt ASC,
     a.pmdadocno,
-    f.apca018;
+    f.apca018
     `;
 
     const result = await connection.execute(
