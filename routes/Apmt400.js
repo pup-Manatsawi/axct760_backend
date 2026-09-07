@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
     a.pmdadocno,
     TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY') AS PMDADOCDT,
     d.total_pmdb006,
-    d.imaal003_list,
+    d.imaal003_list, -- ดึงรายชื่อสินค้าที่รวบแล้วจาก subquery d โดยตรง
     a.pmda022,
     b.pmdldocno,
     TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLDocdt,
@@ -72,11 +72,8 @@ router.get('/', async (req, res) => {
     c.pmdoseq,
     TO_CHAR(c.pmdo011, 'DD/MM/YYYY') AS PMDO011,
     TO_CHAR(c.pmdo012, 'DD/MM/YYYY') AS PMDO012,
-    
-    -- แก้ไขการดึงค่าคอลัมน์ตั้งหนี้ AP ให้ถูกต้อง
-    f.apca018 AS AP_LINE_NO,    -- บรรทัดใบตั้งหนี้
-    f.apcadocno AS AP_DOC_NO,   -- เลขที่ใบตั้งหนี้ (AP Bill)
-    
+    f.apca018,
+    f.apcadocno,
     f.apca066,
     TO_CHAR(m.isam011, 'DD/MM/YYYY') AS ISAM011,
     m.isam025,
@@ -134,6 +131,7 @@ LEFT JOIN pmdo_t c
     ON c.pmdodocno = b.pmdldocno
    AND c.pmdoent = '666'
 
+-- Subquery รวบรวมยอดและรายชื่อสินค้าไว้ในชุดเดียว
 LEFT JOIN (
     SELECT 
         p.pmdbdocno, 
@@ -148,7 +146,6 @@ LEFT JOIN (
     GROUP BY p.pmdbdocno
 ) d ON d.pmdbdocno = a.pmdadocno
 
--- ปรับปรุงจุดเชื่อมต่อ AP: กรองเอาเฉพาะรายการที่อ้างอิงถึงใบรับสินค้า pmdldocno โดยตรง
 LEFT JOIN apcb_t e
     ON e.apcb008 = b.pmdldocno
    AND e.apcbent = '666'
@@ -158,7 +155,6 @@ LEFT JOIN apca_t f
    AND f.apcaent = '666'
    AND f.APCASTUS = 'Y'
 
--- ปรับปรุงจุดเชื่อมต่อการจ่ายเงิน AP Payment
 LEFT JOIN apce_t g
     ON g.apce003 = f.apcadocno
    AND g.apce024 = f.apca018
@@ -197,7 +193,6 @@ WHERE a.pmdadocdt >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.pmdadocdt < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND a.pmdastus = 'Y'
   AND a.pmdaent = '666'
-   ${statusFilter}
 
 GROUP BY 
     b.pmdl004,
@@ -207,34 +202,59 @@ GROUP BY
     l.ooag011,
     a.pmdadocno,
     a.pmdadocdt,
-    b.pmdldocdt,
+    TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY'), 
     d.total_pmdb006,
     d.imaal003_list,
     a.pmda022,
     b.pmdldocno,
+    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'), 
     b.pmdl015,
     c.pmdoseq,
-    c.pmdo011,
-    c.pmdo012,
+    TO_CHAR(c.pmdo011, 'DD/MM/YYYY'),   
+    TO_CHAR(c.pmdo012, 'DD/MM/YYYY'),  
     f.apca018,
     f.apcadocno,
     f.apca066,
-    m.isam011,
+    TO_CHAR(m.isam011, 'DD/MM/YYYY'), 
     m.isam025,
     m.isam014,
     f.apca038,
-    f.apcadocdt,
+    TO_CHAR(f.apcadocdt, 'DD/MM/YYYY'), 
     f.apca103,
     f.apca104,
     f.apca106,
     f.apca108,
-    f.apca010,
-    h.apdastus,
+    TO_CHAR(f.apca010, 'DD/MM/YYYY'),  
+    CASE
+        WHEN h.apdastus = 'Y' THEN 'Confirmed'
+        WHEN h.apdastus = 'X' THEN 'Voided'
+        WHEN h.apdastus = 'N' THEN 'Not Confirmed'
+        WHEN h.apdastus = 'A' THEN 'Approved'
+        WHEN h.apdastus = 'D' THEN 'Withdraw'
+        WHEN h.apdastus = 'R' THEN 'Rejected'
+        WHEN h.apdastus = 'W' THEN 'Approving'
+        ELSE ''
+    END,
     h.apdadocno,
     h.apda014,
-    h.apdadocdt,
+    TO_CHAR(h.apdadocdt, 'DD/MM/YYYY'),
     g.apce119,
-    i.apde006,
+    CASE
+        WHEN i.apde006 = '10' THEN '10:Cash and On-Demand Remittance'
+        WHEN i.apde006 = '20' THEN '20:Bank Remittance'
+        WHEN i.apde006 = '30' THEN '30:Note Type'
+        WHEN i.apde006 = '40' THEN '40:Valuable coupons (vouchers) Type'
+        WHEN i.apde006 = '50' THEN '50:Bank Card/Credit Card'
+        WHEN i.apde006 = '60' THEN '60:Value-Added Type'
+        WHEN i.apde006 = '70' THEN '70:Bank L/C'
+        WHEN i.apde006 = '90' THEN '90:Other type'
+        WHEN i.apde006 = '91' THEN '91:Sell on Credit'
+        WHEN i.apde006 = '92' THEN '92:Cashier Collection'
+        WHEN i.apde006 = '80' THEN '80:Third party payment'
+        WHEN i.apde006 = '99' THEN '99:Repayment of Pledge Note Cashing'
+        WHEN i.apde006 = '94' THEN '94:Advance Collection'
+        ELSE ''
+    END,
     i.apde008,
     i.apde039,
     i.apde040,
@@ -243,7 +263,7 @@ GROUP BY
 ORDER BY 
     a.pmdadocdt ASC,
     a.pmdadocno,
-    f.apca018
+    f.apca018;
     `;
 
     const result = await connection.execute(
