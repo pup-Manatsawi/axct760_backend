@@ -72,8 +72,11 @@ router.get('/', async (req, res) => {
     c.pmdoseq,
     TO_CHAR(c.pmdo011, 'DD/MM/YYYY') AS PMDO011,
     TO_CHAR(c.pmdo012, 'DD/MM/YYYY') AS PMDO012,
-    f.apca018,
-    f.apcadocno,
+    
+    -- แก้ไขการดึงค่าคอลัมน์ตั้งหนี้ AP ให้ถูกต้อง
+    f.apca018 AS AP_LINE_NO,    -- บรรทัดใบตั้งหนี้
+    f.apcadocno AS AP_DOC_NO,   -- เลขที่ใบตั้งหนี้ (AP Bill)
+    
     f.apca066,
     TO_CHAR(m.isam011, 'DD/MM/YYYY') AS ISAM011,
     m.isam025,
@@ -145,6 +148,7 @@ LEFT JOIN (
     GROUP BY p.pmdbdocno
 ) d ON d.pmdbdocno = a.pmdadocno
 
+-- ปรับปรุงจุดเชื่อมต่อ AP: กรองเอาเฉพาะรายการที่อ้างอิงถึงใบรับสินค้า pmdldocno โดยตรง
 LEFT JOIN apcb_t e
     ON e.apcb008 = b.pmdldocno
    AND e.apcbent = '666'
@@ -154,6 +158,7 @@ LEFT JOIN apca_t f
    AND f.apcaent = '666'
    AND f.APCASTUS = 'Y'
 
+-- ปรับปรุงจุดเชื่อมต่อการจ่ายเงิน AP Payment
 LEFT JOIN apce_t g
     ON g.apce003 = f.apcadocno
    AND g.apce024 = f.apca018
@@ -192,7 +197,7 @@ WHERE a.pmdadocdt >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.pmdadocdt < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND a.pmdastus = 'Y'
   AND a.pmdaent = '666'
-  ${statusFilter}
+   ${statusFilter}
 
 GROUP BY 
     b.pmdl004,
@@ -201,7 +206,7 @@ GROUP BY
     k.ooefl003,
     l.ooag011,
     a.pmdadocno,
-    a.pmdadocdt, -- เพิ่มคอลัมน์วันที่ดั้งเดิมเพื่อแก้ไข ORA-00979
+    a.pmdadocdt,
     b.pmdldocdt,
     d.total_pmdb006,
     d.imaal003_list,
@@ -224,12 +229,12 @@ GROUP BY
     f.apca106,
     f.apca108,
     f.apca010,
-    h.apdastus, -- ใช้คอลัมน์ดิบแทน CASE WHEN ทั้งชุด
+    h.apdastus,
     h.apdadocno,
     h.apda014,
     h.apdadocdt,
     g.apce119,
-    i.apde006,  -- ใช้คอลัมน์ดิบแทน CASE WHEN ทั้งชุด
+    i.apde006,
     i.apde008,
     i.apde039,
     i.apde040,
