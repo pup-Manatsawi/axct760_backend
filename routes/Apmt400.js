@@ -67,6 +67,7 @@ router.get('/', async (req, res) => {
     a.pmda022,
     b.pmdldocno,
     TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLDocdt,
+    n.ooff013,
     SUM(c.pmdo033) AS total_pmdo033,
     b.pmdl015,
     c.pmdoseq,
@@ -188,12 +189,18 @@ LEFT JOIN isam_t m
     ON m.isam010 = f.apca066
    AND m.isament = '666'
    AND m.isamstus = 'Y'
+   
+LEFT JOIN ooff_t n
+    ON n.ooff002 = 'apmt500'
+    AND n.ooffent = '666'
+    AND n.ooffstus = 'Y' 
+    AND n.ooff003 = b.pmdldocno
 
 WHERE a.pmdadocdt >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.pmdadocdt < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND a.pmdastus = 'Y'
   AND a.pmdaent = '666'
-   ${statusFilter}
+${statusFilter}
 
 GROUP BY 
     b.pmdl004,
@@ -209,6 +216,7 @@ GROUP BY
     a.pmda022,
     b.pmdldocno,
     TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'), 
+    n.ooff013,
     b.pmdl015,
     c.pmdoseq,
     TO_CHAR(c.pmdo011, 'DD/MM/YYYY'),   
