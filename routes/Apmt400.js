@@ -63,7 +63,8 @@ router.get('/', async (req, res) => {
     a.pmdadocno,
     TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY') AS PMDADOCDT,
     d.total_pmdb006,
-    d.imaal003_list, -- ดึงรายชื่อสินค้าที่รวบแล้วจาก subquery d โดยตรง
+ --   d.pmdb006,
+    d.imaal003,
     a.pmda022,
     b.pmdldocno,
     TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLDocdt,
@@ -132,20 +133,21 @@ LEFT JOIN pmdo_t c
     ON c.pmdodocno = b.pmdldocno
    AND c.pmdoent = '666'
 
--- Subquery รวบรวมยอดและรายชื่อสินค้าไว้ในชุดเดียว
+-- แก้ไข Subquery d ให้ดึง imaal003 และรวมยอด total_pmdb006 ใน subquery เดียว
 LEFT JOIN (
     SELECT 
-        p.pmdbdocno, 
-        SUM(p.pmdb006) AS total_pmdb006,
-        LISTAGG(i.imaal003, ', ') WITHIN GROUP (ORDER BY p.pmdb004) AS imaal003_list
+        p.pmdbdocno,
+        p.pmdbseq,
+        z.imaal003,
+        SUM(p.pmdb006) OVER (PARTITION BY p.pmdbdocno) AS total_pmdb006
     FROM pmdb_t p
-    LEFT JOIN imaal_t i 
-        ON i.imaal001 = p.pmdb004 
-       AND i.imaal002 = 'en_US' 
-       AND i.imaalent = '666'
+    LEFT JOIN imaal_t z
+        ON z.imaal001 = p.pmdb004
+       AND z.imaal002 = 'en_US' 
+       AND z.imaalent = '666'
     WHERE p.pmdbent = '666'
-    GROUP BY p.pmdbdocno
 ) d ON d.pmdbdocno = a.pmdadocno
+   AND d.pmdbseq = c.pmdoseq
 
 LEFT JOIN apcb_t e
     ON e.apcb008 = b.pmdldocno
@@ -190,6 +192,7 @@ LEFT JOIN isam_t m
    AND m.isament = '666'
    AND m.isamstus = 'Y'
    
+   
 LEFT JOIN ooff_t n
     ON n.ooff002 = 'apmt500'
     AND n.ooffent = '666'
@@ -210,30 +213,38 @@ GROUP BY
     l.ooag011,
     a.pmdadocno,
     a.pmdadocdt,
-    TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY'), 
+    TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY'),
     d.total_pmdb006,
-    d.imaal003_list,
+   -- d.pmdb006,
+    d.imaal003,
     a.pmda022,
     b.pmdldocno,
-    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'), 
+    b.pmdldocdt,
+    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'),
     n.ooff013,
     b.pmdl015,
     c.pmdoseq,
-    TO_CHAR(c.pmdo011, 'DD/MM/YYYY'),   
-    TO_CHAR(c.pmdo012, 'DD/MM/YYYY'),  
+    c.pmdo011,
+    TO_CHAR(c.pmdo011, 'DD/MM/YYYY'),
+    c.pmdo012,
+    TO_CHAR(c.pmdo012, 'DD/MM/YYYY'),
     f.apca018,
     f.apcadocno,
     f.apca066,
-    TO_CHAR(m.isam011, 'DD/MM/YYYY'), 
+    m.isam011,
+    TO_CHAR(m.isam011, 'DD/MM/YYYY'),
     m.isam025,
     m.isam014,
     f.apca038,
-    TO_CHAR(f.apcadocdt, 'DD/MM/YYYY'), 
+    f.apcadocdt,
+    TO_CHAR(f.apcadocdt, 'DD/MM/YYYY'),
     f.apca103,
     f.apca104,
     f.apca106,
     f.apca108,
-    TO_CHAR(f.apca010, 'DD/MM/YYYY'),  
+    f.apca010,
+    TO_CHAR(f.apca010, 'DD/MM/YYYY'),
+    h.apdastus,
     CASE
         WHEN h.apdastus = 'Y' THEN 'Confirmed'
         WHEN h.apdastus = 'X' THEN 'Voided'
@@ -246,8 +257,10 @@ GROUP BY
     END,
     h.apdadocno,
     h.apda014,
+    h.apdadocdt,
     TO_CHAR(h.apdadocdt, 'DD/MM/YYYY'),
     g.apce119,
+    i.apde006,
     CASE
         WHEN i.apde006 = '10' THEN '10:Cash and On-Demand Remittance'
         WHEN i.apde006 = '20' THEN '20:Bank Remittance'
@@ -272,6 +285,7 @@ GROUP BY
 ORDER BY 
     a.pmdadocdt ASC,
     a.pmdadocno,
+    c.pmdoseq,
     f.apca018
     `;
 
