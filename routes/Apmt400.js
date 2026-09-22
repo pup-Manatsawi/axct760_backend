@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
 
 
     const sql = `
-    SELECT
+   SELECT
     b.pmdl004,
     j.pmaal004,
     a.pmda003,
@@ -62,31 +62,44 @@ router.get('/', async (req, res) => {
     l.ooag011,
     a.pmdadocno,
     TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY') AS PMDADOCDT,
+
     d.total_pmdb006,
- --   d.pmdb006,
     d.imaal003,
+
     a.pmda022,
     b.pmdldocno,
-    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLDocdt,
+    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY') AS PMDLDOCDT,
+
     n.ooff013,
+
     SUM(c.pmdo033) AS total_pmdo033,
+
     b.pmdl015,
     c.pmdoseq,
-    TO_CHAR(c.pmdo011, 'DD/MM/YYYY') AS PMDO011,
+    --TO_CHAR(c.pmdo011, 'DD/MM/YYYY') AS PMDO011,
     TO_CHAR(c.pmdo012, 'DD/MM/YYYY') AS PMDO012,
+
+    /* ????? PMDSDOCDT */
+    TO_CHAR(s.pmdsdocdt, 'DD/MM/YYYY') AS PMDSDOCDT,
+
     f.apca018,
     f.apcadocno,
     f.apca066,
+
     TO_CHAR(m.isam011, 'DD/MM/YYYY') AS ISAM011,
     m.isam025,
     m.isam014,
+
     f.apca038,
     TO_CHAR(f.apcadocdt, 'DD/MM/YYYY') AS APCADOCDT,
+
     f.apca103,
     f.apca104,
     f.apca106,
     f.apca108,
+
     TO_CHAR(f.apca010, 'DD/MM/YYYY') AS APCA010,
+
     CASE
         WHEN h.apdastus = 'Y' THEN 'Confirmed'
         WHEN h.apdastus = 'X' THEN 'Voided'
@@ -97,10 +110,13 @@ router.get('/', async (req, res) => {
         WHEN h.apdastus = 'W' THEN 'Approving'
         ELSE ''
     END AS APDASTUS,
+
     h.apdadocno,
     h.apda014,
     TO_CHAR(h.apdadocdt, 'DD/MM/YYYY') AS APDADOCDT,
+
     g.apce119,
+
     CASE
         WHEN i.apde006 = '10' THEN '10:Cash and On-Demand Remittance'
         WHEN i.apde006 = '20' THEN '20:Bank Remittance'
@@ -117,9 +133,11 @@ router.get('/', async (req, res) => {
         WHEN i.apde006 = '94' THEN '94:Advance Collection'
         ELSE ''
     END AS APDE006,
+
     i.apde008,
     i.apde039,
     i.apde040,
+
     g.apce010
 
 FROM pmda_t a
@@ -133,156 +151,167 @@ LEFT JOIN pmdo_t c
     ON c.pmdodocno = b.pmdldocno
    AND c.pmdoent = '666'
 
--- แก้ไข Subquery d ให้ดึง imaal003 และรวมยอด total_pmdb006 ใน subquery เดียว
+/* ????? pmds_t ?????? pmdsdocdt ??????
+   ??????????? JOIN ??????????????? */
 LEFT JOIN (
-    SELECT 
+    SELECT
+        pmds006,
+        MAX(pmdsdocdt) AS pmdsdocdt
+    FROM pmds_t
+    WHERE pmdsent = '666'
+    GROUP BY pmds006
+) s
+    ON s.pmds006 = b.pmdldocno
+
+/* PMDB */
+LEFT JOIN (
+    SELECT
         p.pmdbdocno,
         p.pmdbseq,
         z.imaal003,
-        SUM(p.pmdb006) OVER (PARTITION BY p.pmdbdocno) AS total_pmdb006
+
+        SUM(p.pmdb006) OVER (
+            PARTITION BY p.pmdbdocno
+        ) AS total_pmdb006
+
     FROM pmdb_t p
+
     LEFT JOIN imaal_t z
         ON z.imaal001 = p.pmdb004
-       AND z.imaal002 = 'en_US' 
+       AND z.imaal002 = 'en_US'
        AND z.imaalent = '666'
+
     WHERE p.pmdbent = '666'
-) d ON d.pmdbdocno = a.pmdadocno
+) d
+    ON d.pmdbdocno = a.pmdadocno
    AND d.pmdbseq = c.pmdoseq
 
+/* AP Check */
 LEFT JOIN apcb_t e
     ON e.apcb008 = b.pmdldocno
    AND e.apcbent = '666'
 
+/* AP Invoice */
 LEFT JOIN apca_t f
     ON f.apcadocno = e.apcbdocno
    AND f.apcaent = '666'
    AND f.APCASTUS = 'Y'
 
+/* AP Clearing */
 LEFT JOIN apce_t g
     ON g.apce003 = f.apcadocno
    AND g.apce024 = f.apca018
    AND g.apceent = '666'
 
+/* AP Document */
 LEFT JOIN apda_t h
     ON h.apdadocno = g.apcedocno
    AND h.apdaent = '666'
    AND h.APDASTUS = 'Y'
 
+/* AP Detail */
 LEFT JOIN apde_t i
     ON i.apdedocno = h.apdadocno
    AND i.apdeent = '666'
    AND i.apde009 = 'Y'
 
+/* Item */
 LEFT JOIN pmaal_t j
     ON j.pmaal001 = b.pmdl004
    AND j.pmaalent = '666'
    AND j.pmaal002 = 'en_US'
 
+/* Department */
 LEFT JOIN ooefl_t k
     ON k.ooefl001 = a.pmda003
    AND k.ooeflent = '666'
    AND k.ooefl002 = 'en_US'
 
+/* Organization */
 LEFT JOIN ooag_t l
     ON l.ooag001 = a.pmda002
    AND l.ooagent = '666'
 
+/* ISAM */
 LEFT JOIN isam_t m
     ON m.isam010 = f.apca066
    AND m.isament = '666'
    AND m.isamstus = 'Y'
-   
-   
+
+/* OOFF */
 LEFT JOIN ooff_t n
     ON n.ooff002 = 'apmt500'
-    AND n.ooffent = '666'
-    AND n.ooffstus = 'Y' 
-    AND n.ooff003 = b.pmdldocno
+   AND n.ooffent = '666'
+   AND n.ooffstus = 'Y'
+   AND n.ooff003 = b.pmdldocno
 
 WHERE a.pmdadocdt >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.pmdadocdt < TO_DATE(:endDate, 'YYYYMMDD') + 1
   AND a.pmdastus = 'Y'
   AND a.pmdaent = '666'
-${statusFilter}
+  ${statusFilter}
 
-GROUP BY 
+GROUP BY
     b.pmdl004,
     j.pmaal004,
     a.pmda003,
     k.ooefl003,
     l.ooag011,
+
     a.pmdadocno,
     a.pmdadocdt,
-    TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY'),
+
     d.total_pmdb006,
-   -- d.pmdb006,
     d.imaal003,
+
     a.pmda022,
+
     b.pmdldocno,
     b.pmdldocdt,
-    TO_CHAR(b.pmdldocdt, 'DD/MM/YYYY'),
+
     n.ooff013,
+
     b.pmdl015,
+
     c.pmdoseq,
-    c.pmdo011,
-    TO_CHAR(c.pmdo011, 'DD/MM/YYYY'),
+    --c.pmdo011,
     c.pmdo012,
-    TO_CHAR(c.pmdo012, 'DD/MM/YYYY'),
+
+    /* ????? PMDSDOCDT */
+    s.pmdsdocdt,
+
     f.apca018,
     f.apcadocno,
     f.apca066,
+
     m.isam011,
-    TO_CHAR(m.isam011, 'DD/MM/YYYY'),
     m.isam025,
     m.isam014,
+
     f.apca038,
     f.apcadocdt,
-    TO_CHAR(f.apcadocdt, 'DD/MM/YYYY'),
+
     f.apca103,
     f.apca104,
     f.apca106,
     f.apca108,
     f.apca010,
-    TO_CHAR(f.apca010, 'DD/MM/YYYY'),
+
     h.apdastus,
-    CASE
-        WHEN h.apdastus = 'Y' THEN 'Confirmed'
-        WHEN h.apdastus = 'X' THEN 'Voided'
-        WHEN h.apdastus = 'N' THEN 'Not Confirmed'
-        WHEN h.apdastus = 'A' THEN 'Approved'
-        WHEN h.apdastus = 'D' THEN 'Withdraw'
-        WHEN h.apdastus = 'R' THEN 'Rejected'
-        WHEN h.apdastus = 'W' THEN 'Approving'
-        ELSE ''
-    END,
     h.apdadocno,
     h.apda014,
     h.apdadocdt,
-    TO_CHAR(h.apdadocdt, 'DD/MM/YYYY'),
+
     g.apce119,
+
     i.apde006,
-    CASE
-        WHEN i.apde006 = '10' THEN '10:Cash and On-Demand Remittance'
-        WHEN i.apde006 = '20' THEN '20:Bank Remittance'
-        WHEN i.apde006 = '30' THEN '30:Note Type'
-        WHEN i.apde006 = '40' THEN '40:Valuable coupons (vouchers) Type'
-        WHEN i.apde006 = '50' THEN '50:Bank Card/Credit Card'
-        WHEN i.apde006 = '60' THEN '60:Value-Added Type'
-        WHEN i.apde006 = '70' THEN '70:Bank L/C'
-        WHEN i.apde006 = '90' THEN '90:Other type'
-        WHEN i.apde006 = '91' THEN '91:Sell on Credit'
-        WHEN i.apde006 = '92' THEN '92:Cashier Collection'
-        WHEN i.apde006 = '80' THEN '80:Third party payment'
-        WHEN i.apde006 = '99' THEN '99:Repayment of Pledge Note Cashing'
-        WHEN i.apde006 = '94' THEN '94:Advance Collection'
-        ELSE ''
-    END,
     i.apde008,
     i.apde039,
     i.apde040,
+
     g.apce010
 
-ORDER BY 
+ORDER BY
     a.pmdadocdt ASC,
     a.pmdadocno,
     c.pmdoseq,
