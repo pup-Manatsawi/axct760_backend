@@ -63,10 +63,10 @@ router.get('/', async (req, res) => {
     a.pmdadocno,
     TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY') AS PMDADOCDT,
 
-    /* 1. ?????? pmdb006 ??? pmdb004 ???? */
+    /* 1. ดึงค่า pmdb006 และ pmdb004 */
     d.pmdb006,
     d.pmdb004,
-    d.imaal003,
+    d.imaal004, /* <-- 1. ปรับเป็น imaal004 ใน Main SELECT */
 
     a.pmda022,
     b.pmdldocno,
@@ -74,7 +74,7 @@ router.get('/', async (req, res) => {
 
     n.ooff013,
 
-    /* ???? pmdn047 ??? pmdo033 */
+    /* แสดง pmdn047 แทน pmdo033 */
     o.pmdn047,
 
     b.pmdl015,
@@ -154,7 +154,7 @@ LEFT JOIN pmdo_t c
     ON c.pmdodocno = b.pmdldocno
    AND c.pmdoent = '666'
 
-/* JOIN pmdn_t ??????????????????? */
+/* JOIN pmdn_t */
 LEFT JOIN pmdn_t o
     ON o.pmdnent = '666'
    AND o.pmdndocno = b.pmdldocno
@@ -172,14 +172,14 @@ LEFT JOIN (
 ) s
     ON s.pmds006 = b.pmdldocno
 
-/* PMDB (???????????????? JOIN ??????????? pmdldocno) */
+/* PMDB */
 LEFT JOIN (
     SELECT
         p.pmdbdocno,
         p.pmdbseq,
         p.pmdb004,
         p.pmdb006,
-        z.imaal003
+        z.imaal004 /* <-- 2. ปรับเป็น imaal004 ใน Subquery */
     FROM pmdb_t p
     LEFT JOIN imaal_t z
         ON z.imaal001 = p.pmdb004
@@ -266,7 +266,7 @@ GROUP BY
     a.pmdadocdt,
     d.pmdb004,
     d.pmdb006,
-    d.imaal003,
+    d.imaal004,
 
     a.pmda022,
 
