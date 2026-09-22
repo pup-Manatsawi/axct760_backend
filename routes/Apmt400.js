@@ -76,7 +76,6 @@ router.get('/', async (req, res) => {
 
     b.pmdl015,
     c.pmdoseq,
-    --TO_CHAR(c.pmdo011, 'DD/MM/YYYY') AS PMDO011,
     TO_CHAR(c.pmdo012, 'DD/MM/YYYY') AS PMDO012,
 
     /* ????? PMDSDOCDT */
@@ -274,7 +273,6 @@ GROUP BY
     b.pmdl015,
 
     c.pmdoseq,
-    --c.pmdo011,
     c.pmdo012,
 
     /* ????? PMDSDOCDT */
