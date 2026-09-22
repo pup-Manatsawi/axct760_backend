@@ -63,7 +63,9 @@ router.get('/', async (req, res) => {
     a.pmdadocno,
     TO_CHAR(a.pmdadocdt, 'DD/MM/YYYY') AS PMDADOCDT,
 
-    d.total_pmdb006,
+    /* 1. ?????? pmdb006 ??? pmdb004 ???? */
+    d.pmdb006,
+    d.pmdb004,
     d.imaal003,
 
     a.pmda022,
@@ -72,13 +74,15 @@ router.get('/', async (req, res) => {
 
     n.ooff013,
 
-    SUM(c.pmdo033) AS total_pmdo033,
+    /* ???? pmdn047 ??? pmdo033 */
+    o.pmdn047,
 
     b.pmdl015,
     c.pmdoseq,
+    --TO_CHAR(c.pmdo011, 'DD/MM/YYYY') AS PMDO011,
     TO_CHAR(c.pmdo012, 'DD/MM/YYYY') AS PMDO012,
 
-    /* ????? PMDSDOCDT */
+    /* PMDSDOCDT */
     TO_CHAR(s.pmdsdocdt, 'DD/MM/YYYY') AS PMDSDOCDT,
 
     f.apca018,
@@ -150,8 +154,14 @@ LEFT JOIN pmdo_t c
     ON c.pmdodocno = b.pmdldocno
    AND c.pmdoent = '666'
 
-/* ????? pmds_t ?????? pmdsdocdt ??????
-   ??????????? JOIN ??????????????? */
+/* JOIN pmdn_t ??????????????????? */
+LEFT JOIN pmdn_t o
+    ON o.pmdnent = '666'
+   AND o.pmdndocno = b.pmdldocno
+   AND o.pmdn001 = c.pmdo001
+   AND o.pmdnseq = c.pmdoseq
+
+/* pmds_t */
 LEFT JOIN (
     SELECT
         pmds006,
@@ -162,28 +172,23 @@ LEFT JOIN (
 ) s
     ON s.pmds006 = b.pmdldocno
 
-/* PMDB */
+/* PMDB (???????????????? JOIN ??????????? pmdldocno) */
 LEFT JOIN (
     SELECT
         p.pmdbdocno,
         p.pmdbseq,
-        z.imaal003,
-
-        SUM(p.pmdb006) OVER (
-            PARTITION BY p.pmdbdocno
-        ) AS total_pmdb006
-
+        p.pmdb004,
+        p.pmdb006,
+        z.imaal003
     FROM pmdb_t p
-
     LEFT JOIN imaal_t z
         ON z.imaal001 = p.pmdb004
        AND z.imaal002 = 'en_US'
        AND z.imaalent = '666'
-
     WHERE p.pmdbent = '666'
 ) d
     ON d.pmdbdocno = a.pmdadocno
-   AND d.pmdbseq = c.pmdoseq
+   AND (b.pmdldocno IS NULL OR d.pmdbseq = c.pmdoseq)
 
 /* AP Check */
 LEFT JOIN apcb_t e
@@ -259,8 +264,8 @@ GROUP BY
 
     a.pmdadocno,
     a.pmdadocdt,
-
-    d.total_pmdb006,
+    d.pmdb004,
+    d.pmdb006,
     d.imaal003,
 
     a.pmda022,
@@ -270,12 +275,13 @@ GROUP BY
 
     n.ooff013,
 
+    o.pmdn047,
+
     b.pmdl015,
 
     c.pmdoseq,
     c.pmdo012,
 
-    /* ????? PMDSDOCDT */
     s.pmdsdocdt,
 
     f.apca018,
