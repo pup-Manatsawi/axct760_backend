@@ -248,6 +248,7 @@ LEFT JOIN ooff_t n
    AND n.ooffent = '666'
    AND n.ooffstus = 'Y'
    AND n.ooff003 = b.pmdldocno
+   AND n.ooff004 = c.pmdoseq
 
 WHERE a.pmdadocdt >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.pmdadocdt < TO_DATE(:endDate, 'YYYYMMDD') + 1
