@@ -66,6 +66,7 @@ router.get('/', async (req, res) => {
     /* 1. ดึงค่า pmdb006 และ pmdb004 */
     d.pmdb006,
     d.pmdb004,
+    d.imaal003,
     d.imaal004, /* <-- 1. ปรับเป็น imaal004 ใน Main SELECT */
 
     a.pmda022,
@@ -267,6 +268,7 @@ GROUP BY
     a.pmdadocdt,
     d.pmdb004,
     d.pmdb006,
+    d.imaal003,
     d.imaal004,
 
     a.pmda022,
