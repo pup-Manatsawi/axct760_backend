@@ -180,6 +180,7 @@ LEFT JOIN (
         p.pmdbseq,
         p.pmdb004,
         p.pmdb006,
+        z.imaal003, /* <-- 1. เพิ่ม imaal003 */
         z.imaal004 /* <-- 2. ปรับเป็น imaal004 ใน Subquery */
     FROM pmdb_t p
     LEFT JOIN imaal_t z
