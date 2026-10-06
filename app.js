@@ -46,6 +46,10 @@ app.use('/api/aapq360', aapq360Router);
 const apmt400Router = require('./routes/Apmt400');
 app.use('/api/apmt400', apmt400Router);
 
+const qrCodeRouter = require('./routes/qrCode');
+// กำหนด Path สำหรับใช้งาน API QR Code
+app.use('/api/history', qrCodeRouter);
+
 // 👇 reload version
 app.get('/version', (req, res) => {
   res.json({
