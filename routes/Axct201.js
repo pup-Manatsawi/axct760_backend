@@ -5,53 +5,63 @@ const { getConnection } = require('../config/db');
 
 router.get('/', async (req, res) => {
   let connection;
-  const month = req.query.month;
-  const year = req.query.year;
+  const { startYearMonth, endYearMonth } = req.query;
 
-  if (!month || !year) {
-    return res.status(400).send('Missing month or year parameter');
+  if (!startYearMonth || !endYearMonth) {
+    return res.status(400).send('Missing startYearMonth or endYearMonth parameter');
   }
+
+  // แยกปีและเดือนออกจากรูปแบบ "YYYY-MM" (เช่น "2026-09" -> year: 2026, month: 9)
+  const [startYear, startMonth] = startYearMonth.split('-').map(Number);
+  const [endYear, endMonth] = endYearMonth.split('-').map(Number);
 
   try {
     connection = await getConnection();
 
     const result = await connection.execute(
-  `SELECT 
-    a.xcblcomp,
-    a.xcblld,
-    a.xcbl002,
-    a.xcbl003,
-    a.xcbl004,
-    a.xcbl001,
-    a.xcbl005,
-    a.xcbl010,
-    c.oocql004,
-    a.xcbl012,
-    b.ooefl003,
-    a.xcbl100
-  FROM xcbl_t a
-  LEFT JOIN (
-    SELECT ooefl001, ooefl003
-    FROM (
-      SELECT ooefl001, ooefl003,
-             ROW_NUMBER() OVER (PARTITION BY ooefl001 ORDER BY ooefl001) rn
-      FROM ooefl_t
-    ) 
-    WHERE rn = 1
-  ) b ON b.ooefl001 = a.xcbl012
-  LEFT JOIN (
-    SELECT oocql002, oocql004
-    FROM (
-      SELECT oocql002, oocql004,
-             ROW_NUMBER() OVER (PARTITION BY oocql002 ORDER BY oocql002) rn
-      FROM oocql_t
-    )
-    WHERE rn = 1
-  ) c ON c.oocql002 = a.xcbl010
-  WHERE a.xcbl002 = :year
-    AND a.xcbl003 = :month`,
-  { month: parseInt(month), year: parseInt(year) }
-);
+      `SELECT 
+        a.xcblcomp,
+        a.xcblld,
+        a.xcbl002,
+        a.xcbl003,
+        a.xcbl004,
+        a.xcbl001,
+        a.xcbl005,
+        a.xcbl010,
+        c.oocql004,
+        a.xcbl012,
+        b.ooefl003,
+        a.xcbl100
+      FROM xcbl_t a
+      LEFT JOIN (
+        SELECT ooefl001, ooefl003
+        FROM (
+          SELECT ooefl001, ooefl003,
+                 ROW_NUMBER() OVER (PARTITION BY ooefl001 ORDER BY ooefl001) rn
+          FROM ooefl_t
+        ) 
+        WHERE rn = 1
+      ) b ON b.ooefl001 = a.xcbl012
+      LEFT JOIN (
+        SELECT oocql002, oocql004
+        FROM (
+          SELECT oocql002, oocql004,
+                 ROW_NUMBER() OVER (PARTITION BY oocql002 ORDER BY oocql002) rn
+          FROM oocql_t
+        )
+        WHERE rn = 1
+      ) c ON c.oocql002 = a.xcbl010
+      WHERE (
+        (a.xcbl002 * 100 + a.xcbl003) BETWEEN (:startYear * 100 + :startMonth) AND (:endYear * 100 + :endMonth)
+      )`,
+      { 
+        startYear, 
+        startMonth, 
+        endYear, 
+        endMonth 
+      }
+    );
+
     res.json(result.rows);
   } catch (err) {
     console.error(err);
