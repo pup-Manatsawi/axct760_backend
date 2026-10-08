@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
             FROM XCEA_t
         ) WHERE rn = 1
       ) f ON a.glaqdocno = f.XCEA101
-      WHERE (a.glaq002 LIKE '6%' OR a.glaq002 LIKE '7%')
+      WHERE REGEXP_LIKE(TRIM(TO_CHAR(a.glaq002)), '^(6|7)')
         AND b.glapdocdt >= TO_DATE(:startDate, 'YYYY-MM-DD')
         AND b.glapdocdt <= TO_DATE(:endDate, 'YYYY-MM-DD')
         AND (COALESCE(e.apcadocno, f.XCEADOCNO) NOT LIKE '%XC090%' OR COALESCE(e.apcadocno, f.XCEADOCNO) IS NULL)
