@@ -30,6 +30,7 @@ router.get('/', async (req, res) => {
       FROM glaq_t a
       LEFT JOIN glap_t b ON a.glaqdocno = b.glapdocno
       LEFT JOIN ooefl_t c ON a.glaq018 = c.ooefl001
+      AND c.ooefl002 = 'en_US'
       LEFT JOIN (
         SELECT glacl002, glacl004
         FROM (
@@ -58,7 +59,6 @@ router.get('/', async (req, res) => {
         AND b.glapdocdt >= TO_DATE(:startDate, 'YYYY-MM-DD')
         AND b.glapdocdt <= TO_DATE(:endDate, 'YYYY-MM-DD')
         AND (COALESCE(e.apcadocno, f.XCEADOCNO) NOT LIKE '%XC090%' OR COALESCE(e.apcadocno, f.XCEADOCNO) IS NULL)
-        AND c.ooefl002 = 'en_US'
         AND b.glapstus = 'S'
 
       ORDER BY TO_CHAR(b.glapdocdt, 'DD/MM/YYYY') ASC, a.glaqdocno ASC, a.glaq002 ASC`,
