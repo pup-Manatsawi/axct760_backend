@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
       WHERE (
         (a.xcbl002 * 100 + a.xcbl003) BETWEEN (:startYear * 100 + :startMonth) AND (:endYear * 100 + :endMonth)
       )
-        ORDER BY a.xcbl002, a.xcbl003, a.xcbl004`
+        ORDER BY a.xcbl002, a.xcbl003`
       ,
       { 
         startYear, 
