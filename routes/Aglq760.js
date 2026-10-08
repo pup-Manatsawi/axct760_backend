@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
         AND c.ooefl002 = 'en_US'
         AND b.glapstus = 'S'
 
-      ORDER BY a.glaq002 ASC, TO_CHAR(b.glapdocdt, 'DD/MM/YYYY') ASC`,
+      ORDER BY TO_CHAR(b.glapdocdt, 'DD/MM/YYYY') ASC, a.glaqdocno ASC, a.glaq002 ASC`,
       { startDate: startDate, endDate: endDate }
     );
 
