@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     console.log(`📅 Range: ${startDate} → ${endDate}`);
 
     const sql = `
-        WITH b_agg AS (
+       WITH b_agg AS (
     SELECT 
         isagdocno,
         isag004,
@@ -99,7 +99,7 @@ k_se AS (
         xmdk006
     FROM xmdk_t
     WHERE xmdkent = '666'
-    GROUP BY xmdkdocno, xmdk005,xmdk006
+    GROUP BY xmdkdocno, xmdk005, xmdk006
 ),
 
 f_agg AS (
@@ -152,7 +152,7 @@ i_agg AS (
     GROUP BY xmdkdocno
 ),
 
- ooan_fix AS (
+ooan_fix AS (
     SELECT 
         ooan004,
         ooan002,  
@@ -195,12 +195,17 @@ SELECT
     a.isaf021,
     a.isaf002,
     
-    MIN(
-  CASE 
-      WHEN b.isag015 = '-1' THEN -b.isag101
-      ELSE b.isag101
-  END
-) AS isag101,
+    -- แก้ไข: เอา MIN ออก เพื่อให้แสดงค่าตรงๆ ตามเงื่อนไข
+    RTRIM(
+        RTRIM(
+            TO_CHAR(
+                CASE 
+                    WHEN b.isag015 = '-1' THEN -b.isag101
+                    ELSE b.isag101
+                END, 'FM999999999999.9999'
+            ), '0'
+        ), '.'
+    ) AS isag101,
 
     ROUND(
     CASE
@@ -282,43 +287,36 @@ SELECT
     END
 ) AS isag004,
 
-
     CASE 
         WHEN a.isaf011 LIKE 'F%' 
         THEN RTRIM(DBMS_LOB.SUBSTR(h.list_docno, 4000, 1), ',')
         WHEN e.xmdl001 LIKE 'TS-SS%' 
         THEN k.xmdk005
         ELSE e.xmdl001
-    END
- AS xmdl001,
+    END AS xmdl001,
     
     CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
         WHEN f.xmdh015 = 'KG' THEN 1
         ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
-        
-        END AS Unit,
- CASE
+    END AS Unit,
+
+    CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
         ELSE g.xmda033
-    END As xmda033,
+    END AS xmda033,
     
     CASE
         WHEN a.isaf100 = 'USD' THEN a.isaf101
         WHEN a.isaf100 = 'THB' THEN j.ooan005
         ELSE 0
-    END As ooan005,
-    
-    
-   /* j.ooan005,*/
+    END AS ooan005,
 
-
------คำนวณเรทแบบใหม่ (ใช้ LATERAL JOIN แทน)------
-   ROUND(
-CASE
-WHEN a.isaf100 = 'USD' THEN
+    ROUND(
+    CASE
+    WHEN a.isaf100 = 'USD' THEN
     SUM(
         CASE 
             WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
@@ -326,7 +324,7 @@ WHEN a.isaf100 = 'USD' THEN
         END
     )
 
-WHEN a.isaf100 = 'THB' THEN
+    WHEN a.isaf100 = 'THB' THEN
     SUM(
         CASE 
             WHEN b.isag015 = '-1' THEN -NVL(b.isag103,0)
@@ -334,14 +332,13 @@ WHEN a.isaf100 = 'THB' THEN
         END
     ) / NVL(NULLIF(j.ooan005,0),1)
 
-ELSE 0
-END
-,2) AS ratexx,
-b.isag009,
-n.imaa009,
-m.imaf051
+    ELSE 0
+    END
+    ,2) AS ratexx,
 
-   
+    b.isag009,
+    n.imaa009,
+    m.imaf051
 
 FROM isaf_t a
 
@@ -366,7 +363,6 @@ LEFT JOIN f_agg f
     ON e.xmdl001 = f.xmdhdocno
     AND e.xmdl003 = f.xmdh001
 
--- ✅ KEY ที่ถูก + ไม่เบิ้ล
 LEFT JOIN g_agg g
     ON g.xmdadocno = f.xmdh001
 
@@ -381,9 +377,7 @@ LEFT JOIN k_se k
     
 LEFT JOIN g_agg l
     ON l.xmdadocno = k.xmdk006
-    
 
------- จัดการเรื่องแสดงเรท -----
 LEFT JOIN LATERAL (
      SELECT oo.ooan005, oo.ooan002
     FROM ooan_fix oo
@@ -407,9 +401,7 @@ WHERE a.isaf014 >= TO_DATE(:startDate, 'YYYYMMDD')
   AND a.isafstus = 'Y'
   AND a.isafent = '666'
 
-
-
-GROUP BY
+GROUP BY 
     TO_CHAR(a.isaf014, 'DD Mon YYYY', 'NLS_DATE_LANGUAGE=ENGLISH'),
     a.isaf011,
 
@@ -441,8 +433,18 @@ GROUP BY
     a.isaf100,
     a.ISAFUA001,
     
-
-   CASE 
+    -- แก้ไข: เพิ่ม CASE WHEN ของ isag101 เข้ามาใน GROUP BY ด้วย
+    RTRIM(
+        RTRIM(
+            TO_CHAR(
+                CASE 
+                    WHEN b.isag015 = '-1' THEN -b.isag101
+                    ELSE b.isag101
+                END, 'FM999999999999.9999'
+            ), '0'
+        ), '.'
+    ),
+    CASE 
         WHEN a.isaf011 LIKE 'F%' 
         THEN RTRIM(DBMS_LOB.SUBSTR(h.list_docno, 4000, 1), ',')
         WHEN e.xmdl001 LIKE 'TS-SS%' 
@@ -450,20 +452,22 @@ GROUP BY
         ELSE e.xmdl001
     END,
 
-     CASE
+    CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN NVL(TO_NUMBER(REGEXP_SUBSTR(e.xmdl017, '[0-9]+', 1, 1)), 0) / 1000
         WHEN f.xmdh015 = 'KG' THEN 1
         ELSE NVL(TO_NUMBER(REGEXP_SUBSTR(f.xmdh015, '[0-9]+', 1, 1)), 0) / 1000 
-        
-        END,
-     j.ooan005,
-     j.ooan002,
-     CASE
+    END,
+
+    j.ooan005,
+    j.ooan002,
+
+    CASE
         WHEN e.xmdl001 LIKE 'TS-SE%' THEN l.xmda033
         WHEN e.xmdl001 LIKE 'TS-SS%' THEN l.xmda033
         ELSE g.xmda033
     END,
+
     b.isag009,
     n.imaa009,
     m.imaf051
