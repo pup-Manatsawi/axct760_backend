@@ -27,6 +27,7 @@ router.get('/', async (req, res) => {
     INNER JOIN isaf_t c 
         ON c.isafdocno = b.isagdocno
         AND c.isaf001 = '1'
+        AND c.isafstus = 'Y'
     WHERE b.isagent = '666'
 )
 SELECT
@@ -52,7 +53,7 @@ SELECT
     END AS GrossRate,
     d.xmdl001,
     TO_CHAR(e.XMDGDOCDT, 'DD/MM/YYYY') AS XMDGDOCDT,
-   -- bc.isaf003,
+    bc.isaf003,
     f.pmaal004,
     
     CASE
@@ -67,6 +68,7 @@ SELECT
     
     g.xmdh023,
     SUBSTR(g.xmdh006, -6) AS xmdh006_last6,
+    i.imag011,
     bc.isaf011
     
 FROM xcck_t a
@@ -93,6 +95,12 @@ LEFT JOIN xmdh_t g
 LEFT JOIN xmdk_t h
     ON a.xcck006 = h.xmdkdocno
     AND h.xmdkent = '666'
+    
+LEFT JOIN imag_t i
+    ON a.xcck010 = i.imag001
+    AND i.imagent = '666'
+    AND i.imagstus = 'Y'
+    AND i.imagsite = 'TSIC'
     
 WHERE a.xcck004 = :year
   AND a.xcck005 = :month
