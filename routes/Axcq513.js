@@ -47,10 +47,13 @@ SELECT
     -- 1.(Gross Profit)
     (bc.isag113 - a.xcck202) AS GrossProfit,
     -- 2.(Gross Profit Rate %)
+    ROUND(
     CASE
         WHEN bc.isag113 = 0 THEN 0
-        ELSE ((bc.isag113 - a.xcck202) / bc.isag113) * 100
-    END AS GrossRate,
+        ELSE ((bc.isag113 - a.xcck202) / bc.isag113) * 100.0
+    END, 
+    2
+) AS GrossRate,
     d.xmdl001,
     TO_CHAR(e.XMDGDOCDT, 'DD/MM/YYYY') AS XMDGDOCDT,
     bc.isaf003,
