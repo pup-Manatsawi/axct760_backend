@@ -49,6 +49,9 @@ app.use('/api/apmt400', apmt400Router);
 const axcq513Router = require('./routes/Axcq513');
 app.use('/api/axcq513', axcq513Router);
 
+const axmq140Router = require('./routes/Axmq140');
+app.use('/api/axmq140', axmq140Router);
+
 const qrCodeRouter = require('./routes/qrCode');
 // กำหนด Path สำหรับใช้งาน API QR Code
 app.use('/api/history', qrCodeRouter);
