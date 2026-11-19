@@ -31,7 +31,13 @@ router.get('/', async (req, res) => {
         -- 🔹 คำนวณยอดหลังหักยอดส่งของสะสม (นำผลรวม xmdg051 ทุกรายการที่เข้าเงื่อนไขมาลบ)
         (a.pmab006 + NVL(b.xmac014, 0) + NVL(b.xmac016, 0) + NVL(b.xmac018, 0) + NVL(b.xmac020, 0))
         - NVL(b.xmac012, 0) - NVL(b.xmac015, 0) - NVL(b.xmac019, 0) 
-        - NVL(c.total_xmdg051, 0) AS CalShipping_cost
+        - NVL(c.total_xmdg051, 0) AS CalShipping_cost,
+
+        -- 🔹 คำนวณเพิ่มเครดิตที่ยังไม่ถึงวันนี้ (นำผลรวม xmdg051 ทุกรายการที่เข้าเงื่อนไขมาบวก)
+        (a.pmab006 + NVL(b.xmac014, 0) + NVL(b.xmac016, 0) + NVL(b.xmac018, 0) + NVL(b.xmac020, 0))
+        - NVL(b.xmac012, 0) - NVL(b.xmac015, 0) - NVL(b.xmac019, 0) 
+        - NVL(c.total_xmdg051, 0) + NVL(e.today_xmdg051, 0) AS TodayShipping_cost
+        
 
       FROM pmab_t a
 
@@ -53,6 +59,20 @@ router.get('/', async (req, res) => {
         GROUP BY xmdg005
       ) c
         ON c.xmdg005 = a.pmab001
+        
+    LEFT JOIN (
+        SELECT 
+          xmdg005,
+          SUM(NVL(xmdg051, 0)) AS today_xmdg051
+        FROM xmdg_t
+        WHERE xmdgstus IN ('N', 'Y')
+          AND xmdgent  = :ent
+          AND xmdgsite = :site
+          AND TRUNC(xmdgdocdt) > TRUNC(SYSDATE)
+        GROUP BY xmdg005
+      ) e
+        ON e.xmdg005 = a.pmab001 
+        
           
       -- เชื่อมตาราง pmaal_t (ชื่อ/รายละเอียดสินค้า)
       LEFT JOIN pmaal_t d
@@ -65,6 +85,7 @@ router.get('/', async (req, res) => {
         AND a.pmab002  = :pmab002
 
       ORDER BY a.pmab001 ASC
+
     `;
 
     const result = await connection.execute(
