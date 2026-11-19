@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
           xmdg005,
           SUM(NVL(xmdg051, 0)) AS total_xmdg051
         FROM xmdg_t
-        WHERE xmdgstus = 'N'
+        WHERE xmdgstus IN ('N', 'H')
           AND xmdgent  = :ent
           AND xmdgsite = :site
         GROUP BY xmdg005
@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
           xmdg005,
           SUM(NVL(xmdg051, 0)) AS today_xmdg051
         FROM xmdg_t
-        WHERE xmdgstus IN ('N', 'Y')
+        WHERE xmdgstus IN ('N', 'Y', 'H')
           AND xmdgent  = :ent
           AND xmdgsite = :site
           AND TRUNC(xmdgdocdt) > TRUNC(SYSDATE)
