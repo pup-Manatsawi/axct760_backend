@@ -101,24 +101,10 @@ router.get('/', async (req, res) => {
         b.xmdh017,
         c.xmda033,
         g.oofb011,
-
         i_agg.isag002_list,
-
-        (
-            SELECT LISTAGG(DISTINCT j.isaf011, ', ')
-            WITHIN GROUP (ORDER BY j.isaf011)
-            FROM xmdk_t h2
-            JOIN isag_t i2
-                ON h2.xmdkdocno = i2.isag002
-               AND h2.xmdk006  = i2.isag019
-            JOIN isaf_t j
-                ON i2.isagdocno = j.isafdocno
-            WHERE h2.xmdk005 = a.xmdgdocno
-              AND h2.xmdk006 = b.xmdh001
-              AND h2.xmdkent = '666'
-              AND h2.xmdkstus = 'S'
-              AND j.isafent = '666'
-        ) AS isaf011_list,
+        i_agg.isaf011_list,
+        i_agg.isafdocdt_list,
+        i_agg.isaf014_list,
         a.xmdg008,
         m.ooibl004,
         a.xmdg009,
@@ -177,17 +163,24 @@ router.get('/', async (req, res) => {
      AND b.xmdh001 = h.XMDK006
 
     LEFT JOIN (
-        SELECT 
+        SELECT
             h.xmdk005 AS docno,
             h.xmdk006 AS item,
-            LISTAGG(DISTINCT i.isag002, ', ') 
-            WITHIN GROUP (ORDER BY i.isag002) AS isag002_list
+            LISTAGG(DISTINCT i.isag002, ', ') WITHIN GROUP (ORDER BY i.isag002) AS isag002_list,
+            -- ดึงและมัดรวมข้อมูล 3 ตัวจากตาราง isaf_t ไว้ที่นี่ทีเดียว
+            LISTAGG(DISTINCT j.isaf011, ', ') WITHIN GROUP (ORDER BY j.isaf011) AS isaf011_list,
+            LISTAGG(DISTINCT TO_CHAR(j.isafdocdt, 'DD/MM/YYYY'), ', ') WITHIN GROUP (ORDER BY j.isafdocdt) AS isafdocdt_list,
+            LISTAGG(DISTINCT TO_CHAR(j.isaf014, 'DD/MM/YYYY'), ', ') WITHIN GROUP (ORDER BY j.isaf014) AS isaf014_list
         FROM xmdk_t h
         JOIN isag_t i
           ON h.xmdkdocno = i.isag002
          AND h.xmdk006 = i.isag019
+        -- JOIN เพิ่มไปหาตาราง isaf_t ในนี้ทีเดียวเลย
+        JOIN isaf_t j
+          ON i.isagdocno = j.isafdocno
         WHERE h.xmdkent = '666'
-        AND h.xmdkstus = 'S'
+          AND h.xmdkstus = 'S'
+          AND j.isafent = '666'
         GROUP BY h.xmdk005, h.xmdk006
     ) i_agg
       ON a.xmdgdocno = i_agg.docno
