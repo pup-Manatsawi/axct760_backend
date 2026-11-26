@@ -168,6 +168,7 @@ router.get('/', async (req, res) => {
                    ) rn
             FROM XMDK_T h
             WHERE h.xmdkent = '666'
+            AND h.xmdkstus = 'S'
         )
         WHERE rn = 1
     ) h
@@ -185,6 +186,7 @@ router.get('/', async (req, res) => {
           ON h.xmdkdocno = i.isag002
          AND h.xmdk006 = i.isag019
         WHERE h.xmdkent = '666'
+        AND h.xmdkstus = 'S'
         GROUP BY h.xmdk005, h.xmdk006
     ) i_agg
       ON a.xmdgdocno = i_agg.docno
