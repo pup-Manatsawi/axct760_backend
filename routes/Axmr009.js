@@ -116,6 +116,7 @@ router.get('/', async (req, res) => {
             WHERE h2.xmdk005 = a.xmdgdocno
               AND h2.xmdk006 = b.xmdh001
               AND h2.xmdkent = '666'
+              AND h2.xmdkstus = 'S'
               AND j.isafent = '666'
         ) AS isaf011_list,
         a.xmdg008,
